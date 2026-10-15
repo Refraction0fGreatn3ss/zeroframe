@@ -1,9 +1,5 @@
-/**
- * ZeroFrame Dashboard & Command Center Service
- */
-
+import type { CommandCenterMetrics } from '../stores/dashboard-store';
 import { apiClient } from './api-client';
-import { CommandCenterMetrics } from '../stores/dashboard-store';
 
 export interface SecurityChartsData {
   hourlyTrend: Array<{
@@ -42,11 +38,17 @@ export const dashboardService = {
     return res.data;
   },
 
-  async setKillSwitch(engaged: boolean, reason?: string): Promise<{ success: boolean; governedResponseKillSwitch: boolean }> {
-    const res = await apiClient.post<{ success: boolean; governedResponseKillSwitch: boolean }>('/dashboard/kill-switch', {
-      engaged,
-      reason,
-    });
+  async setKillSwitch(
+    engaged: boolean,
+    reason?: string,
+  ): Promise<{ success: boolean; governedResponseKillSwitch: boolean }> {
+    const res = await apiClient.post<{ success: boolean; governedResponseKillSwitch: boolean }>(
+      '/dashboard/kill-switch',
+      {
+        engaged,
+        reason,
+      },
+    );
     return res.data;
   },
 };

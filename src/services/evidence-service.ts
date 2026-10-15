@@ -1,7 +1,3 @@
-/**
- * ZeroFrame Evidence, Targeted PCAP & Witness Plane Service
- */
-
 import { apiClient } from './api-client';
 
 export interface EvidenceLedgerBlock {

@@ -1,15 +1,17 @@
-/**
- * ZeroFrame Centralized Enterprise API Client
- * 
- * Guarantees:
- * 1. Hard Tenant Isolation (Mandatory X-Tenant-ID header)
- * 2. Strict Session Authentication (Bearer token injection)
- * 3. End-to-end Request Tracing (X-Correlation-ID generation)
- * 4. In-flight Request Cancellation on Tenant Switch or Logout (AbortSignal tracking)
- * 5. Safe Retry Policy (GET requests only; mutations are never retried)
- * 6. Centralized Error Normalization (401 Expiry, 403 RBAC, 409 Mismatch)
- * 7. Zero Secret Telemetry / Logging
- */
+import { RUNTIME_CONFIG } from '../config/runtime';
+import { getErrorMessage } from '../lib/error-message';
+import {
+  ABORTED_REQUEST_STATUS,
+  ApiError,
+  createHttpError,
+  isAbortError,
+  NETWORK_FAILURE_STATUS,
+  toErrorResponseBody,
+} from './api-error';
+import { persistSessionToken, restoreSessionToken } from './session-token-storage';
+
+export type { ApiErrorPayload } from './api-error';
+export { ApiError } from './api-error';
 
 export interface ApiClientConfig {
   baseUrl: string;
@@ -23,68 +25,64 @@ export interface ApiRequestOptions extends RequestInit {
   isIdempotent?: boolean;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T;
   status: number;
   correlationId: string;
 }
 
-export interface ApiErrorPayload {
-  error: string;
-  message: string;
-  correlationId?: string;
-  status: number;
+interface TrackedRequest {
+  controller: AbortController;
+  tenantId: string;
 }
 
-export class ApiError extends Error {
-  status: number;
-  correlationId?: string;
-  code: string;
+const DEFAULT_TIMEOUT_MS = 15_000;
+const MAX_GET_RETRIES = 2;
+const RETRY_BACKOFF_STEP_MS = 300;
 
-  constructor(status: number, message: string, code: string = 'API_ERROR', correlationId?: string) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-    this.code = code;
-    this.correlationId = correlationId;
+function createCorrelationId(): string {
+  return `zf-req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+}
+
+function buildUrl(baseUrl: string, endpoint: string): string {
+  return `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+}
+
+function toHeaderRecord(headers: HeadersInit | undefined): Record<string, string> {
+  if (!headers) return {};
+  if (headers instanceof Headers || Array.isArray(headers)) {
+    return Object.fromEntries(headers instanceof Headers ? headers.entries() : headers);
+  }
+  return headers;
+}
+
+function serializeBody(body: unknown): string | undefined {
+  return body ? JSON.stringify(body) : undefined;
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function abortQuietly(controller: AbortController): void {
+  try {
+    controller.abort();
+  } catch {
+    // Already aborted.
   }
 }
 
 class CentralizedApiClient {
-  private baseUrl: string = '/api/v1';
-  private defaultTimeoutMs: number = 15000;
-  private token: string | null = null;
-  private currentTenantId: string = 'tenant-enterprise-hq';
-  private activeControllers: Set<{ controller: AbortController; tenantId: string }> = new Set();
-  private sessionExpiredHandlers: Set<() => void> = new Set();
-
-  constructor() {
-    // Attempt restoring session token from storage if available
-    try {
-      const storedToken = sessionStorage.getItem('zf_session_token');
-      if (storedToken) {
-        this.token = storedToken;
-      } else {
-        // Fallback to initial seed token for smooth immediate experience
-        this.token = 'zf-session-tok-prod-8841-lead';
-        sessionStorage.setItem('zf_session_token', this.token);
-      }
-    } catch {
-      this.token = 'zf-session-tok-prod-8841-lead';
-    }
-  }
+  private readonly baseUrl = RUNTIME_CONFIG.apiBaseUrl;
+  private readonly defaultTimeoutMs = DEFAULT_TIMEOUT_MS;
+  private token: string | null = restoreSessionToken();
+  private currentTenantId: string = RUNTIME_CONFIG.defaultTenantId;
+  private readonly activeRequests = new Set<TrackedRequest>();
+  private readonly sessionExpiredHandlers = new Set<() => void>();
 
   public setToken(token: string | null) {
     this.token = token;
-    try {
-      if (token) {
-        sessionStorage.setItem('zf_session_token', token);
-      } else {
-        sessionStorage.removeItem('zf_session_token');
-      }
-    } catch {
-      // storage unavailable
-    }
+    persistSessionToken(token);
   }
 
   public getToken(): string | null {
@@ -106,219 +104,127 @@ class CentralizedApiClient {
     };
   }
 
-  /**
-   * Aborts all in-flight HTTP requests associated with a tenant.
-   * Crucial for Step 2 of the 11-step Hard Tenant Isolation switch.
-   */
   public abortTenantRequests(tenantId?: string) {
     const target = tenantId || this.currentTenantId;
-    for (const item of this.activeControllers) {
-      if (item.tenantId === target || !tenantId) {
-        try {
-          item.controller.abort();
-        } catch {
-          // ignore already aborted
-        }
-        this.activeControllers.delete(item);
+    for (const request of this.activeRequests) {
+      if (request.tenantId === target || !tenantId) {
+        abortQuietly(request.controller);
+        this.activeRequests.delete(request);
       }
     }
   }
 
-  /**
-   * Aborts all in-flight requests across the entire application immediately.
-   * Crucial for session security termination, auto-logout, and credential sanitization.
-   */
   public abortAll() {
-    for (const item of this.activeControllers) {
-      try {
-        item.controller.abort();
-      } catch {
-        // ignore already aborted
-      }
+    for (const request of this.activeRequests) {
+      abortQuietly(request.controller);
     }
-    this.activeControllers.clear();
+    this.activeRequests.clear();
   }
 
-  /**
-   * Execute an authoritative API request with retries, timeout, and isolation headers.
-   */
-  public async request<T = any>(endpoint: string, options: ApiRequestOptions = {}): Promise<ApiResponse<T>> {
-    const tenantScope = options.tenantId || this.currentTenantId;
-    const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-    const correlationId = `zf-req-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  public async request<T = unknown>(endpoint: string, options: ApiRequestOptions = {}): Promise<ApiResponse<T>> {
+    const { timeoutMs, skipAuth, tenantId, isIdempotent: _isIdempotent, ...fetchInit } = options;
+    const tenantScope = tenantId || this.currentTenantId;
+    const url = buildUrl(this.baseUrl, endpoint);
+    const correlationId = createCorrelationId();
 
-    // Set up request abortion and timeout
     const controller = new AbortController();
-    const timeout = options.timeoutMs || this.defaultTimeoutMs;
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs || this.defaultTimeoutMs);
+    const trackedRequest: TrackedRequest = { controller, tenantId: tenantScope };
+    this.activeRequests.add(trackedRequest);
 
-    const activeItem = { controller, tenantId: tenantScope };
-    this.activeControllers.add(activeItem);
+    const releaseRequest = () => {
+      clearTimeout(timeoutId);
+      this.activeRequests.delete(trackedRequest);
+    };
 
-    // Merge signals if caller provided an external AbortSignal
-    if (options.signal) {
-      options.signal.addEventListener('abort', () => controller.abort());
+    if (fetchInit.signal) {
+      fetchInit.signal.addEventListener('abort', () => controller.abort());
     }
 
+    const headers = this.buildHeaders(correlationId, tenantScope, fetchInit.headers, skipAuth);
+    const method = (fetchInit.method || 'GET').toUpperCase();
+    const maxRetries = method === 'GET' ? MAX_GET_RETRIES : 0;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, { ...fetchInit, method, headers, signal: controller.signal });
+        // The timeout and abort tracking end with the first response; later retries run untracked.
+        releaseRequest();
+
+        if (!response.ok) {
+          throw await this.toHttpError(response, correlationId);
+        }
+
+        const data: T = await response.json();
+        return { data, status: response.status, correlationId };
+      } catch (error) {
+        if (isAbortError(error)) {
+          releaseRequest();
+          throw new ApiError(ABORTED_REQUEST_STATUS, 'Request aborted or timed out.', 'REQUEST_ABORTED', correlationId);
+        }
+
+        if (attempt < maxRetries) {
+          await wait(RETRY_BACKOFF_STEP_MS * (attempt + 1));
+          continue;
+        }
+
+        releaseRequest();
+        if (error instanceof ApiError) {
+          throw error;
+        }
+        throw new ApiError(
+          NETWORK_FAILURE_STATUS,
+          getErrorMessage(error, 'Network unreachable'),
+          'NETWORK_ERROR',
+          correlationId,
+        );
+      }
+    }
+
+    throw new ApiError(NETWORK_FAILURE_STATUS, 'Maximum retry limit reached', 'RETRY_EXHAUSTED', correlationId);
+  }
+
+  public get<T = unknown>(endpoint: string, options?: ApiRequestOptions): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { ...options, method: 'GET' });
+  }
+
+  public post<T = unknown>(endpoint: string, body?: unknown, options?: ApiRequestOptions): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { ...options, method: 'POST', body: serializeBody(body) });
+  }
+
+  public put<T = unknown>(endpoint: string, body?: unknown, options?: ApiRequestOptions): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { ...options, method: 'PUT', body: serializeBody(body) });
+  }
+
+  public delete<T = unknown>(endpoint: string, options?: ApiRequestOptions): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { ...options, method: 'DELETE' });
+  }
+
+  private buildHeaders(
+    correlationId: string,
+    tenantScope: string,
+    customHeaders: HeadersInit | undefined,
+    skipAuth: boolean | undefined,
+  ): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'X-Correlation-ID': correlationId,
       'X-Tenant-ID': tenantScope,
       'X-Requested-With': 'XMLHttpRequest',
-      ...((options.headers as Record<string, string>) || {}),
+      ...toHeaderRecord(customHeaders),
     };
-
-    if (!options.skipAuth && this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+    if (!skipAuth && this.token) {
+      headers.Authorization = `Bearer ${this.token}`;
     }
+    return headers;
+  }
 
-    const method = (options.method || 'GET').toUpperCase();
-    const isGet = method === 'GET';
-
-    // Retry loop (strictly limited to safe idempotent GET requests)
-    const maxRetries = isGet ? 2 : 0;
-    let attempt = 0;
-
-    while (attempt <= maxRetries) {
-      try {
-        const response = await fetch(url, {
-          ...options,
-          method,
-          headers,
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-        this.activeControllers.delete(activeItem);
-
-        // Handle 401 Session Expiry / Revocation
-        if (response.status === 401) {
-          const errorData = await response.json().catch(() => ({}));
-          for (const handler of this.sessionExpiredHandlers) {
-            handler();
-          }
-          throw new ApiError(
-            401,
-            errorData.message || 'Session expired or revoked by authority.',
-            errorData.error || 'UNAUTHORIZED',
-            correlationId
-          );
-        }
-
-        // Handle 403 Forbidden / RBAC Denied
-        if (response.status === 403) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new ApiError(
-            403,
-            errorData.message || 'Insufficient permissions for this operation.',
-            errorData.error || 'FORBIDDEN',
-            correlationId
-          );
-        }
-
-        // Handle 429 Rate Limit Exceeded
-        if (response.status === 429) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new ApiError(
-            429,
-            errorData.message || 'Rate limit threshold exceeded. Anti-automation protection active.',
-            'RATE_LIMIT_EXCEEDED',
-            correlationId
-          );
-        }
-
-        // Handle 400 or 409 Tenant Mismatch
-        if (response.status === 400 || response.status === 409) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new ApiError(
-            response.status,
-            errorData.message || 'Tenant scope error or data conflict.',
-            errorData.error || 'TENANT_ERROR',
-            correlationId
-          );
-        }
-
-        // Handle 5xx errors (allow retry if GET)
-        if (response.status >= 500) {
-          if (attempt < maxRetries) {
-            attempt++;
-            await new Promise((res) => setTimeout(res, 300 * attempt));
-            continue;
-          }
-          const errorData = await response.json().catch(() => ({}));
-          throw new ApiError(
-            response.status,
-            errorData.message || 'Internal cluster authority error.',
-            'SERVER_ERROR',
-            correlationId
-          );
-        }
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new ApiError(
-            response.status,
-            errorData.message || `Request failed with HTTP ${response.status}`,
-            'HTTP_ERROR',
-            correlationId
-          );
-        }
-
-        const data: T = await response.json();
-        return {
-          data,
-          status: response.status,
-          correlationId,
-        };
-      } catch (err: any) {
-        if (err.name === 'AbortError') {
-          clearTimeout(timeoutId);
-          this.activeControllers.delete(activeItem);
-          throw new ApiError(499, 'Request aborted or timed out.', 'REQUEST_ABORTED', correlationId);
-        }
-
-        if (attempt < maxRetries) {
-          attempt++;
-          await new Promise((res) => setTimeout(res, 300 * attempt));
-          continue;
-        }
-
-        clearTimeout(timeoutId);
-        this.activeControllers.delete(activeItem);
-
-        if (err instanceof ApiError) {
-          throw err;
-        }
-
-        throw new ApiError(0, err.message || 'Network unreachable', 'NETWORK_ERROR', correlationId);
-      }
+  private async toHttpError(response: Response, correlationId: string): Promise<ApiError> {
+    const body = toErrorResponseBody(await response.json().catch(() => ({})));
+    if (response.status === 401) {
+      for (const handler of this.sessionExpiredHandlers) handler();
     }
-
-    throw new ApiError(0, 'Maximum retry limit reached', 'RETRY_EXHAUSTED', correlationId);
-  }
-
-  public get<T>(endpoint: string, options?: ApiRequestOptions): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { ...options, method: 'GET' });
-  }
-
-  public post<T>(endpoint: string, body?: any, options?: ApiRequestOptions): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      ...options,
-      method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
-    });
-  }
-
-  public put<T>(endpoint: string, body?: any, options?: ApiRequestOptions): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      ...options,
-      method: 'PUT',
-      body: body ? JSON.stringify(body) : undefined,
-    });
-  }
-
-  public delete<T>(endpoint: string, options?: ApiRequestOptions): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { ...options, method: 'DELETE' });
+    return createHttpError(response.status, body, correlationId);
   }
 }
 

@@ -1,48 +1,31 @@
-/**
- * High-Density Enterprise Sidebar for ZeroFrame NDR/XDR
- * 
- * Complies with Frontend Design Constitution:
- * - Clean, unboxed typography (Zero-Pill discipline)
- * - Single-elevation flat depth with 1px border lines
- * - No thick left accent bars or ornamental pseudo-technical footers
- * - Clear active states with subtle high-contrast background highlights
- */
-
-import React from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { ChevronRight, Database, LayoutDashboard, Search, Settings, Shield, Terminal } from 'lucide-react';
+import type React from 'react';
+import { NAVIGATION_STRUCTURE } from '../../config/routes';
 import { useAppStore } from '../../stores/app-store';
 import { useInvestigationStore } from '../../stores/investigation-store';
-import { NAVIGATION_STRUCTURE } from '../../config/routes';
-import {
-  LayoutDashboard,
-  Search,
-  Shield,
-  Database,
-  Settings,
-  ChevronRight,
-  HelpCircle,
-  Terminal,
-} from 'lucide-react';
+
+const SECTION_ICONS: Record<string, LucideIcon> = {
+  Overview: LayoutDashboard,
+  Investigate: Search,
+  Respond: Shield,
+  Evidence: Database,
+  System: Settings,
+};
+
+const SCADA_OT_ACTIVE_ALERTS = 1;
+
+const SectionIcon: React.FC<{ title: string }> = ({ title }) => {
+  const Icon = SECTION_ICONS[title];
+  return Icon ? <Icon className="w-3.5 h-3.5 text-cyan-400" /> : null;
+};
+
+const isNavItemActive = (currentPath: string, itemPath: string) =>
+  currentPath === itemPath || (itemPath !== '/overview' && currentPath.startsWith(itemPath));
 
 export const Sidebar: React.FC = () => {
   const { currentPath, setCurrentPath, setCommandPaletteOpen } = useAppStore();
   const { incidents, alerts } = useInvestigationStore();
-
-  const getSectionIcon = (title: string) => {
-    switch (title) {
-      case 'Overview':
-        return <LayoutDashboard className="w-3.5 h-3.5 text-cyan-400" />;
-      case 'Investigate':
-        return <Search className="w-3.5 h-3.5 text-cyan-400" />;
-      case 'Respond':
-        return <Shield className="w-3.5 h-3.5 text-cyan-400" />;
-      case 'Evidence':
-        return <Database className="w-3.5 h-3.5 text-cyan-400" />;
-      case 'System':
-        return <Settings className="w-3.5 h-3.5 text-cyan-400" />;
-      default:
-        return null;
-    }
-  };
 
   const openIncidentsCount = incidents.filter((i) => i.state === 'OPEN').length;
 
@@ -51,10 +34,9 @@ export const Sidebar: React.FC = () => {
       <div className="py-3 space-y-4">
         {NAVIGATION_STRUCTURE.map((section) => (
           <div key={section.title} className="space-y-1">
-            {/* Section Heading */}
             <div className="px-3.5 py-1 text-[11px] font-semibold text-[var(--zf-text-muted)] uppercase tracking-wider flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {getSectionIcon(section.title)}
+                <SectionIcon title={section.title} />
                 <span className="font-semibold tracking-wider text-[var(--zf-text-secondary)]">{section.title}</span>
               </div>
               <span className="text-[10px] font-mono text-[var(--zf-text-muted)] tabular-nums">
@@ -62,15 +44,13 @@ export const Sidebar: React.FC = () => {
               </span>
             </div>
 
-            {/* Navigation Items */}
             <nav className="space-y-0.5 px-2">
               {section.items.map((item) => {
-                const isActive =
-                  currentPath === item.path ||
-                  (item.path !== '/overview' && currentPath.startsWith(item.path));
+                const isActive = isNavItemActive(currentPath, item.path);
 
                 return (
                   <button
+                    type="button"
                     key={item.id}
                     onClick={() => setCurrentPath(item.path)}
                     className={`w-full flex items-center justify-between px-3 py-1.5 rounded transition-colors text-left cursor-pointer group ${
@@ -94,11 +74,14 @@ export const Sidebar: React.FC = () => {
                       )}
                       {item.id === 'scada-ot' && (
                         <span className="font-mono text-[10px] text-amber-400 font-bold tabular-nums">
-                          1
+                          {SCADA_OT_ACTIVE_ALERTS}
                         </span>
                       )}
                       {item.id === 'activity-log' && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Live streaming" />
+                        <span
+                          className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
+                          title="Live streaming"
+                        />
                       )}
                       <ChevronRight
                         className={`w-3 h-3 transition-transform ${
@@ -116,7 +99,6 @@ export const Sidebar: React.FC = () => {
         ))}
       </div>
 
-      {/* Clean Utility Footer */}
       <div className="mt-auto p-3 border-t border-[var(--zf-border-subtle)] bg-[var(--zf-surface-sidebar)] text-[11px] text-[var(--zf-text-muted)] flex items-center justify-between">
         <button
           type="button"
@@ -130,9 +112,7 @@ export const Sidebar: React.FC = () => {
           </kbd>
         </button>
 
-        <span className="text-[10px] font-mono text-slate-600">
-          v1.0-ent
-        </span>
+        <span className="text-[10px] font-mono text-slate-600">v1.0-ent</span>
       </div>
     </aside>
   );

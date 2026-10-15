@@ -61,7 +61,8 @@ export const emeaFinanceSeed: TenantSeed = {
     {
       id: 'INC-EMEA-0042',
       title: 'Anomalous High-Volume SWIFT Gateway TLS Handshake Cipher Downgrade',
-      plainEnglishSummary: 'A payment settlement workstation attempted a legacy TLS 1.0 connection with non-approved cipher suites to the Zurich clearing server.',
+      plainEnglishSummary:
+        'A payment settlement workstation attempted a legacy TLS 1.0 connection with non-approved cipher suites to the Zurich clearing server.',
       severity: 'HIGH',
       state: 'INVESTIGATING',
       firstSeen: new Date(Date.now() - 1000 * 60 * 55).toISOString(),
@@ -76,7 +77,13 @@ export const emeaFinanceSeed: TenantSeed = {
       fidelity: 'DEEP_PACKET',
       confidenceScore: 92,
       mitreTactics: [
-        { id: 'T1573.002', name: 'Asymmetric Cryptography', technique: 'Downgraded Protocol Negotiation', techniqueId: 'T1573.002', stage: 'Command and Control' },
+        {
+          id: 'T1573.002',
+          name: 'Asymmetric Cryptography',
+          technique: 'Downgraded Protocol Negotiation',
+          techniqueId: 'T1573.002',
+          stage: 'Command and Control',
+        },
       ],
       associatedAlertIds: ['ALT-EMEA-881'],
       evidenceIds: ['EVD-EMEA-PCAP-0042'],
@@ -110,7 +117,14 @@ export const emeaFinanceSeed: TenantSeed = {
       id: 'ENT-EMEA-SETTLE-02',
       mac: '00:50:56:ee:14:92',
       currentIp: '10.220.14.92',
-      historicalIps: [{ ip: '10.220.14.92', firstSeen: '2025-01-01T00:00:00Z', lastSeen: new Date().toISOString(), leaseOrigin: 'STATIC' }],
+      historicalIps: [
+        {
+          ip: '10.220.14.92',
+          firstSeen: '2025-01-01T00:00:00Z',
+          lastSeen: new Date().toISOString(),
+          leaseOrigin: 'STATIC',
+        },
+      ],
       hostname: 'SRV-EMEA-SETTLE-02',
       entityType: 'SERVER',
       os: 'Oracle Linux 9.2 (PCI Hardened)',
@@ -155,9 +169,30 @@ export const emeaFinanceSeed: TenantSeed = {
     },
   ],
   witnessNodes: [
-    { id: 'WITNESS-EMEA-01', location: 'Frankfurt Equinix FR2', state: 'ONLINE', role: 'LEADER', quorumMember: true, latencyMs: 2.1 },
-    { id: 'WITNESS-EMEA-02', location: 'London Interxion LON1', state: 'ONLINE', role: 'FOLLOWER', quorumMember: true, latencyMs: 8.4 },
-    { id: 'WITNESS-EMEA-03', location: 'Zurich Green Datacenter', state: 'ONLINE', role: 'FOLLOWER', quorumMember: true, latencyMs: 5.7 },
+    {
+      id: 'WITNESS-EMEA-01',
+      location: 'Frankfurt Equinix FR2',
+      state: 'ONLINE',
+      role: 'LEADER',
+      quorumMember: true,
+      latencyMs: 2.1,
+    },
+    {
+      id: 'WITNESS-EMEA-02',
+      location: 'London Interxion LON1',
+      state: 'ONLINE',
+      role: 'FOLLOWER',
+      quorumMember: true,
+      latencyMs: 8.4,
+    },
+    {
+      id: 'WITNESS-EMEA-03',
+      location: 'Zurich Green Datacenter',
+      state: 'ONLINE',
+      role: 'FOLLOWER',
+      quorumMember: true,
+      latencyMs: 5.7,
+    },
   ],
   fleetSensors: [
     {
@@ -185,10 +220,30 @@ export const emeaFinanceSeed: TenantSeed = {
     ],
   },
   detectionCapabilities: [
-    { id: 'DET-EMEA-01', detectorKey: 'pci_crypto_auditor', name: 'PCI-DSS Cryptographic Suite Assurance', category: 'Compliance', state: 'HEALTHY', assuranceState: 'AVAILABLE', lastCanaryTimestamp: new Date(Date.now() - 1000 * 35).toISOString(), lastCanarySignedHash: 'sha256-emea-4411...881a', requiredTelemetry: 'DEEP_PACKET', mitreCoverage: ['T1573.002'] },
+    {
+      id: 'DET-EMEA-01',
+      detectorKey: 'pci_crypto_auditor',
+      name: 'PCI-DSS Cryptographic Suite Assurance',
+      category: 'Compliance',
+      state: 'HEALTHY',
+      assuranceState: 'AVAILABLE',
+      lastCanaryTimestamp: new Date(Date.now() - 1000 * 35).toISOString(),
+      lastCanarySignedHash: 'sha256-emea-4411...881a',
+      requiredTelemetry: 'DEEP_PACKET',
+      mitreCoverage: ['T1573.002'],
+    },
   ],
   complianceFrameworks: [
-    { id: 'COMP-PCI-DSS-4', name: 'PCI-DSS v4.0 Tier 1 Service Provider', controlsEvaluated: 240, controlsPassing: 240, controlsDegraded: 0, complianceScore: 100.0, status: 'COMPLIANT', lastAudit: '2026-10-12T04:00:00Z' },
+    {
+      id: 'COMP-PCI-DSS-4',
+      name: 'PCI-DSS v4.0 Tier 1 Service Provider',
+      controlsEvaluated: 240,
+      controlsPassing: 240,
+      controlsDegraded: 0,
+      complianceScore: 100.0,
+      status: 'COMPLIANT',
+      lastAudit: '2026-10-12T04:00:00Z',
+    },
   ],
   integrations: [],
   auditLogs: [],

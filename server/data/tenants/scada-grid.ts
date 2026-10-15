@@ -59,7 +59,8 @@ export const scadaGridSeed: TenantSeed = {
     {
       id: 'INC-OT-0019',
       title: 'Unauthorized Modbus TCP Force Single Coil Function Code 05 Injection',
-      plainEnglishSummary: 'An unauthenticated engineering workstation injected a breaker trip command (FC05) into Substation-04 Protective Relay RTU-402.',
+      plainEnglishSummary:
+        'An unauthenticated engineering workstation injected a breaker trip command (FC05) into Substation-04 Protective Relay RTU-402.',
       severity: 'CRITICAL',
       state: 'OPEN',
       firstSeen: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
@@ -74,7 +75,13 @@ export const scadaGridSeed: TenantSeed = {
       fidelity: 'DEEP_PACKET',
       confidenceScore: 99,
       mitreTactics: [
-        { id: 'T0855', name: 'Unauthorized Command Message', technique: 'Modbus FC05 Coil Override', techniqueId: 'T0855', stage: 'Impact' },
+        {
+          id: 'T0855',
+          name: 'Unauthorized Command Message',
+          technique: 'Modbus FC05 Coil Override',
+          techniqueId: 'T0855',
+          stage: 'Impact',
+        },
       ],
       associatedAlertIds: ['ALT-OT-902'],
       evidenceIds: ['EVD-OT-PCAP-0019'],
@@ -108,7 +115,14 @@ export const scadaGridSeed: TenantSeed = {
       id: 'ENT-OT-RELAY-402',
       mac: '00:1c:73:40:02:42',
       currentIp: '192.168.100.42',
-      historicalIps: [{ ip: '192.168.100.42', firstSeen: '2023-01-01T00:00:00Z', lastSeen: new Date().toISOString(), leaseOrigin: 'STATIC' }],
+      historicalIps: [
+        {
+          ip: '192.168.100.42',
+          firstSeen: '2023-01-01T00:00:00Z',
+          lastSeen: new Date().toISOString(),
+          leaseOrigin: 'STATIC',
+        },
+      ],
       hostname: 'RTU-SUBSTATION-04-RELAY',
       entityType: 'OT_PLC',
       os: 'Schneider Electric Micom Firmware v4.8',
@@ -153,9 +167,30 @@ export const scadaGridSeed: TenantSeed = {
     },
   ],
   witnessNodes: [
-    { id: 'WITNESS-OT-AIRGAP-01', location: 'Bunker-Alpha Substation', state: 'ONLINE', role: 'LEADER', quorumMember: true, latencyMs: 0.4 },
-    { id: 'WITNESS-OT-AIRGAP-02', location: 'Bunker-Beta Hydro-Station', state: 'ONLINE', role: 'FOLLOWER', quorumMember: true, latencyMs: 0.6 },
-    { id: 'WITNESS-OT-AIRGAP-03', location: 'Bunker-Gamma Switching-Yard', state: 'ONLINE', role: 'FOLLOWER', quorumMember: true, latencyMs: 0.5 },
+    {
+      id: 'WITNESS-OT-AIRGAP-01',
+      location: 'Bunker-Alpha Substation',
+      state: 'ONLINE',
+      role: 'LEADER',
+      quorumMember: true,
+      latencyMs: 0.4,
+    },
+    {
+      id: 'WITNESS-OT-AIRGAP-02',
+      location: 'Bunker-Beta Hydro-Station',
+      state: 'ONLINE',
+      role: 'FOLLOWER',
+      quorumMember: true,
+      latencyMs: 0.6,
+    },
+    {
+      id: 'WITNESS-OT-AIRGAP-03',
+      location: 'Bunker-Gamma Switching-Yard',
+      state: 'ONLINE',
+      role: 'FOLLOWER',
+      quorumMember: true,
+      latencyMs: 0.5,
+    },
   ],
   fleetSensors: [
     {
@@ -180,10 +215,30 @@ export const scadaGridSeed: TenantSeed = {
     ],
   },
   detectionCapabilities: [
-    { id: 'DET-OT-01', detectorKey: 'modbus_ot_validator', name: 'Industrial Modbus Protocol Compliance', category: 'OT Safety', state: 'HEALTHY', assuranceState: 'AVAILABLE', lastCanaryTimestamp: new Date(Date.now() - 1000 * 20).toISOString(), lastCanarySignedHash: 'sha256-scada-9901...12ff', requiredTelemetry: 'DEEP_PACKET', mitreCoverage: ['T0855'] },
+    {
+      id: 'DET-OT-01',
+      detectorKey: 'modbus_ot_validator',
+      name: 'Industrial Modbus Protocol Compliance',
+      category: 'OT Safety',
+      state: 'HEALTHY',
+      assuranceState: 'AVAILABLE',
+      lastCanaryTimestamp: new Date(Date.now() - 1000 * 20).toISOString(),
+      lastCanarySignedHash: 'sha256-scada-9901...12ff',
+      requiredTelemetry: 'DEEP_PACKET',
+      mitreCoverage: ['T0855'],
+    },
   ],
   complianceFrameworks: [
-    { id: 'COMP-NERC-CIP', name: 'NERC CIP Version 5 Critical Cyber Asset', controlsEvaluated: 64, controlsPassing: 64, controlsDegraded: 0, complianceScore: 100.0, status: 'COMPLIANT', lastAudit: '2026-10-12T00:00:00Z' },
+    {
+      id: 'COMP-NERC-CIP',
+      name: 'NERC CIP Version 5 Critical Cyber Asset',
+      controlsEvaluated: 64,
+      controlsPassing: 64,
+      controlsDegraded: 0,
+      complianceScore: 100.0,
+      status: 'COMPLIANT',
+      lastAudit: '2026-10-12T00:00:00Z',
+    },
   ],
   integrations: [],
   auditLogs: [],

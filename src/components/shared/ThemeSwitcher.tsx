@@ -1,35 +1,57 @@
-/**
- * Enterprise Theme Selector Menu
- * Clean, compact theme switcher for top bar / user dropdown
- */
+import { Check, Palette } from 'lucide-react';
+import { type FC, useRef, useState } from 'react';
+import { useClickOutside } from '../../hooks/use-click-outside';
+import { type ThemeConfig, useThemeStore } from '../../stores/theme-store';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { useThemeStore, ZeroFlashThemeId } from '../../stores/theme-store';
-import { Palette, Check, Sun, Moon } from 'lucide-react';
+interface ThemeOptionProps {
+  theme: ThemeConfig;
+  isSelected: boolean;
+  onSelect: () => void;
+}
+
+const ThemeOption: FC<ThemeOptionProps> = ({ theme, isSelected, onSelect }) => (
+  <button
+    type="button"
+    onClick={onSelect}
+    className={`w-full text-left px-2.5 py-2 rounded flex items-start gap-2.5 transition-colors cursor-pointer ${
+      isSelected
+        ? 'bg-[var(--zf-nav-active-bg)] text-[var(--zf-text-primary)] font-medium border-l-2 border-[var(--zf-brand-accent)]'
+        : 'text-[var(--zf-text-secondary)] hover:text-[var(--zf-text-primary)] hover:bg-[var(--zf-surface-card-hover)]'
+    }`}
+  >
+    <div
+      className="w-4 h-4 rounded-full mt-0.5 shrink-0 border border-black/20 flex items-center justify-center shadow-xs"
+      style={{ backgroundColor: theme.previewBg }}
+    >
+      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: theme.previewAccent }} />
+    </div>
+
+    <div className="flex-1 min-w-0">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-[var(--zf-text-primary)]">{theme.name}</span>
+        {isSelected && <Check className="w-3.5 h-3.5 text-[var(--zf-brand-accent)] shrink-0 ml-1" />}
+      </div>
+      <p className="text-[10px] text-[var(--zf-text-muted)] leading-tight mt-0.5 line-clamp-2">{theme.description}</p>
+    </div>
+  </button>
+);
 
 interface ThemeSwitcherProps {
   variant?: 'compact' | 'full';
   className?: string;
 }
 
-export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ variant = 'compact', className = '' }) => {
+export const ThemeSwitcher: FC<ThemeSwitcherProps> = ({ variant = 'compact', className = '' }) => {
   const { theme, setTheme, themes, currentThemeConfig } = useThemeStore();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  useClickOutside(dropdownRef, () => setIsOpen(false));
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--zf-surface-tertiary)] border border-[var(--zf-border-subtle)] text-[var(--zf-text-secondary)] hover:text-[var(--zf-text-primary)] hover:border-[var(--zf-border-medium)] transition-colors text-xs font-sans cursor-pointer group"
         title={`Current theme: ${currentThemeConfig.name}. Click to switch theme.`}
@@ -55,47 +77,17 @@ export const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ variant = 'compact
           </div>
 
           <div className="space-y-1">
-            {themes.map((t) => {
-              const isSelected = t.id === theme;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    setTheme(t.id);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full text-left px-2.5 py-2 rounded flex items-start gap-2.5 transition-colors cursor-pointer ${
-                    isSelected
-                      ? 'bg-[var(--zf-nav-active-bg)] text-[var(--zf-text-primary)] font-medium border-l-2 border-[var(--zf-brand-accent)]'
-                      : 'text-[var(--zf-text-secondary)] hover:text-[var(--zf-text-primary)] hover:bg-[var(--zf-surface-card-hover)]'
-                  }`}
-                >
-                  <div
-                    className="w-4 h-4 rounded-full mt-0.5 shrink-0 border border-black/20 flex items-center justify-center shadow-xs"
-                    style={{ backgroundColor: t.previewBg }}
-                  >
-                    <span
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: t.previewAccent }}
-                    />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-[var(--zf-text-primary)]">
-                        {t.name}
-                      </span>
-                      {isSelected && (
-                        <Check className="w-3.5 h-3.5 text-[var(--zf-brand-accent)] shrink-0 ml-1" />
-                      )}
-                    </div>
-                    <p className="text-[10px] text-[var(--zf-text-muted)] leading-tight mt-0.5 line-clamp-2">
-                      {t.description}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
+            {themes.map((t) => (
+              <ThemeOption
+                key={t.id}
+                theme={t}
+                isSelected={t.id === theme}
+                onSelect={() => {
+                  setTheme(t.id);
+                  setIsOpen(false);
+                }}
+              />
+            ))}
           </div>
 
           <div className="mt-2 pt-1.5 border-t border-[var(--zf-border-subtle)] px-2 text-[10px] text-[var(--zf-text-muted)] flex items-center justify-between">

@@ -1,73 +1,70 @@
-/**
- * ZeroFrame Authentication & Operator Session Service
- * 
- * Provides:
- * - Credentials & SSO Login
- * - Current Session & Operator Validation
- * - Step-Up MFA Challenge Elevation
- * - Idle Lock / Pin Unlock
- * - Active Sessions Discovery & Remote Revocation
- * - Logout
- */
+import type { InactivityPolicyKey, LoginCredentials, OperatorIdentity, OperatorSessionRecord } from '../types/session';
+import { apiClient } from './api-client';
 
-import { apiClient, ApiResponse } from './api-client';
+export type { OperatorIdentity, OperatorSessionRecord } from '../types/session';
 
-export interface OperatorIdentity {
-  id: string;
-  username: string;
-  displayName: string;
-  email: string;
-  role: string;
-  clearanceLevel: string;
-  avatarUrl?: string;
+export interface SessionValidationResult {
+  valid: boolean;
+  session: OperatorSessionRecord;
+  operator: OperatorIdentity;
 }
 
-export interface OperatorSessionRecord {
-  sessionId: string;
-  token: string;
-  operator: OperatorIdentity;
-  permissions: string[];
-  mfaVerified: boolean;
-  stepUpRequired: boolean;
-  stepUpExpiresAt?: string;
-  createdAt: string;
-  expiresAt: string;
-  lastActiveAt: string;
-  ipAddress: string;
-  userAgent: string;
-  deviceLabel: string;
-  isCurrent?: boolean;
+export interface StepUpResult {
+  success: boolean;
+  message: string;
+  stepUpExpiresAt: string;
+}
+
+export interface UnlockResult {
+  unlocked: boolean;
+  unlockedAt: string;
+}
+
+export interface SessionPingResult {
+  valid: boolean;
+  serverTime: string;
+  policy: string;
+  inactivityTimeoutMs: number;
+  remainingInactivityMs: number;
+}
+
+export interface PolicyUpdateResult {
+  success: boolean;
+  policy: string;
+  inactivityTimeoutMs: number;
 }
 
 export const authService = {
-  async login(credentials: { username?: string; password?: string; ssoProvider?: string }): Promise<OperatorSessionRecord> {
-    const res = await apiClient.post<{ session: OperatorSessionRecord }>('/auth/login', credentials, { skipAuth: true });
+  async login(credentials: LoginCredentials): Promise<OperatorSessionRecord> {
+    const res = await apiClient.post<{ session: OperatorSessionRecord }>('/auth/login', credentials, {
+      skipAuth: true,
+    });
     apiClient.setToken(res.data.session.token);
     return res.data.session;
   },
 
-  async getSession(): Promise<{ valid: boolean; session: OperatorSessionRecord; operator: OperatorIdentity }> {
-    const res = await apiClient.get<{ valid: boolean; session: OperatorSessionRecord; operator: OperatorIdentity }>('/auth/session');
+  async getSession(): Promise<SessionValidationResult> {
+    const res = await apiClient.get<SessionValidationResult>('/auth/session');
     return res.data;
   },
 
-  async stepUpMfa(code: string): Promise<{ success: boolean; message: string; stepUpExpiresAt: string }> {
-    const res = await apiClient.post<{ success: boolean; message: string; stepUpExpiresAt: string }>('/auth/step-up', { code });
+  async stepUpMfa(code: string): Promise<StepUpResult> {
+    const res = await apiClient.post<StepUpResult>('/auth/step-up', { code });
     return res.data;
   },
 
-  async unlockSession(pin: string): Promise<{ unlocked: boolean; unlockedAt: string }> {
-    const res = await apiClient.post<{ unlocked: boolean; unlockedAt: string }>('/auth/unlock', { pin });
+  async unlockSession(pin: string): Promise<UnlockResult> {
+    const res = await apiClient.post<UnlockResult>('/auth/unlock', { pin });
     return res.data;
   },
 
-  async ping(): Promise<{ valid: boolean; serverTime: string; policy: string; inactivityTimeoutMs: number; remainingInactivityMs: number }> {
-    const res = await apiClient.post<{ valid: boolean; serverTime: string; policy: string; inactivityTimeoutMs: number; remainingInactivityMs: number }>('/auth/ping');
+  async ping(): Promise<SessionPingResult> {
+    const res = await apiClient.post<SessionPingResult>('/auth/ping');
     return res.data;
   },
 
-  async setPolicy(policy: '5m' | '10m' | '15m'): Promise<{ success: boolean; policy: string; inactivityTimeoutMs: number }> {
-    const res = await apiClient.post<{ success: boolean; policy: string; inactivityTimeoutMs: number }>('/auth/policy', { policy });
+  async setPolicy(policy: InactivityPolicyKey): Promise<PolicyUpdateResult> {
+    const res = await apiClient.post<PolicyUpdateResult>('/auth/policy', { policy });
     return res.data;
   },
 
@@ -75,7 +72,7 @@ export const authService = {
     try {
       await apiClient.post('/auth/logout', { reason });
     } catch {
-      // ignore
+      // Local revocation proceeds even when the server is unreachable.
     } finally {
       apiClient.setToken(null);
     }

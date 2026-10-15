@@ -1,20 +1,17 @@
-/**
- * ZeroFrame System & Fleet Service
- * Fleet Sensors, Inspection Pipeline, Live Detection Assurance Canaries,
- * Compliance Frameworks, Integrations, Audit Logs, and Licensing.
- */
-
+import type { DetectionCapability } from '../types';
+import type { AuditLogEntry, EnterpriseIntegration, EnterpriseLicense } from '../types/admin';
+import type { ComplianceFrameworkPayload, InspectionPipelinePayload } from '../types/api-payloads';
+import type { SensorNode } from '../types/fleet';
 import { apiClient } from './api-client';
-import { DetectionCapability } from '../types';
 
 export const systemService = {
-  async getFleetSensors(): Promise<any[]> {
-    const res = await apiClient.get<{ sensors: any[] }>('/system/fleet');
+  async getFleetSensors(): Promise<SensorNode[]> {
+    const res = await apiClient.get<{ sensors: SensorNode[] }>('/system/fleet');
     return res.data.sensors;
   },
 
-  async getInspectionPipeline(): Promise<any> {
-    const res = await apiClient.get<any>('/system/inspection');
+  async getInspectionPipeline(): Promise<InspectionPipelinePayload> {
+    const res = await apiClient.get<InspectionPipelinePayload>('/system/inspection');
     return res.data;
   },
 
@@ -24,27 +21,29 @@ export const systemService = {
   },
 
   async triggerCanary(): Promise<{ success: boolean; auditedAt: string; message: string }> {
-    const res = await apiClient.post<{ success: boolean; auditedAt: string; message: string }>('/system/assurance/trigger-canary');
+    const res = await apiClient.post<{ success: boolean; auditedAt: string; message: string }>(
+      '/system/assurance/trigger-canary',
+    );
     return res.data;
   },
 
-  async getCompliance(): Promise<any[]> {
-    const res = await apiClient.get<{ frameworks: any[] }>('/system/compliance');
+  async getCompliance(): Promise<ComplianceFrameworkPayload[]> {
+    const res = await apiClient.get<{ frameworks: ComplianceFrameworkPayload[] }>('/system/compliance');
     return res.data.frameworks;
   },
 
-  async getIntegrations(): Promise<any[]> {
-    const res = await apiClient.get<{ integrations: any[] }>('/system/integrations');
+  async getIntegrations(): Promise<EnterpriseIntegration[]> {
+    const res = await apiClient.get<{ integrations: EnterpriseIntegration[] }>('/system/integrations');
     return res.data.integrations;
   },
 
-  async getAuditLogs(): Promise<any[]> {
-    const res = await apiClient.get<{ logs: any[] }>('/system/audit');
+  async getAuditLogs(): Promise<AuditLogEntry[]> {
+    const res = await apiClient.get<{ logs: AuditLogEntry[] }>('/system/audit');
     return res.data.logs;
   },
 
-  async getLicensing(): Promise<any> {
-    const res = await apiClient.get<any>('/system/licensing');
+  async getLicensing(): Promise<EnterpriseLicense> {
+    const res = await apiClient.get<EnterpriseLicense>('/system/licensing');
     return res.data;
   },
 };

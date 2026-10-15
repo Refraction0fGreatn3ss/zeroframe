@@ -4,7 +4,12 @@ import type { Incident, TenantContext } from '../types/tenant.ts';
 
 const CANARY_PASS_COUNT = 11;
 
-export function setKillSwitch(tenant: TenantContext, session: OperatorSession, engaged: unknown, reason?: string): boolean {
+export function setKillSwitch(
+  tenant: TenantContext,
+  session: OperatorSession,
+  engaged: unknown,
+  reason?: string,
+): boolean {
   tenant.db.metrics.governedResponseKillSwitch = Boolean(engaged);
   broadcastTenantEvent(tenant.id, 'KILL_SWITCH_CHANGED', {
     governedResponseKillSwitch: tenant.db.metrics.governedResponseKillSwitch,

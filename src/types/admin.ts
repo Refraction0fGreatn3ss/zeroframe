@@ -1,14 +1,14 @@
-/**
- * Enterprise Admin, Integrations, Licensing & Compliance Types
- */
-
-import { SecurityState } from './index';
-
 export interface EnterpriseIntegration {
   id: string;
   category: 'ENDPOINT_XDR' | 'IDENTITY' | 'INFRASTRUCTURE' | 'SIEM_SOAR' | 'CLOUD' | 'TICKETING';
   name: string;
-  vendor: 'Microsoft Defender XDR' | 'CrowdStrike Falcon' | 'Palo Alto Cortex XDR' | 'Splunk' | 'ServiceNow' | 'AWS Security Hub';
+  vendor:
+    | 'Microsoft Defender XDR'
+    | 'CrowdStrike Falcon'
+    | 'Palo Alto Cortex XDR'
+    | 'Splunk'
+    | 'ServiceNow'
+    | 'AWS Security Hub';
   status: 'NOT_CONFIGURED' | 'CONFIGURED' | 'AUTHENTICATED' | 'HEALTHY' | 'DEGRADED' | 'FAILED' | 'DISABLED';
   lastSyncTimestamp: string;
   entitiesCorroborated: number;

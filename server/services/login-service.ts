@@ -24,9 +24,7 @@ export interface LoginRequest {
   ssoProvider?: string;
 }
 
-export type LoginResult =
-  | { ok: true; session: OperatorSession }
-  | { ok: false; error: string; message: string };
+export type LoginResult = { ok: true; session: OperatorSession } | { ok: false; error: string; message: string };
 
 interface SessionTemplate {
   tokenPrefix: string;

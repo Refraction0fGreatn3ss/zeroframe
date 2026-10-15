@@ -3,9 +3,10 @@
 @layer base {
   :root {
     --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --font-mono:
+      ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-    /* Theme 1: Obsidian Onyx (Default) — Pure OLED Black & Laser Hyper-Cyan */
+    /* Obsidian Onyx (default) */
     --zf-bg-app: #000000;
     --zf-bg-main: #040508;
     --zf-surface-topbar: #05070c;
@@ -28,7 +29,7 @@
     --zf-table-row-hover: #0c101a;
   }
 
-  /* Theme 2: Midnight Phantom — Deep Marine Navy SpecOps & Electric Azure */
+  /* Midnight Phantom */
   [data-theme="midnight-phantom"] {
     --zf-bg-app: #030714;
     --zf-bg-main: #050c20;
@@ -52,7 +53,7 @@
     --zf-table-row-hover: #0e1e47;
   }
 
-  /* Theme 3: Matrix Terminal — Phosphor Emerald CRT Cyber Terminal */
+  /* Matrix Terminal */
   [data-theme="matrix-terminal"] {
     --zf-bg-app: #020904;
     --zf-bg-main: #030e06;
@@ -76,7 +77,7 @@
     --zf-table-row-hover: #09210e;
   }
 
-  /* Theme 4: Tokyo Cyberpunk — High-Voltage Synthwave Violet, Neon Rose & Amber */
+  /* Tokyo Cyberpunk */
   [data-theme="tokyo-cyberpunk"] {
     --zf-bg-app: #090212;
     --zf-bg-main: #0e041c;
@@ -100,7 +101,7 @@
     --zf-table-row-hover: #1f0a3d;
   }
 
-  /* Theme 5: Solaris Daylight — Surgical White High-Clarity Daylight Operations */
+  /* Solaris Daylight */
   [data-theme="solaris-daylight"] {
     --zf-bg-app: #f1f5f9;
     --zf-bg-main: #f8fafc;
@@ -117,7 +118,7 @@
     --zf-text-secondary: #334155;
     --zf-text-muted: #64748b;
     --zf-brand-accent: #2563eb;
-    --zf-brand-accent-subtle: rgba(37, 99, 235, 0.10);
+    --zf-brand-accent-subtle: rgba(37, 99, 235, 0.1);
     --zf-nav-active-bg: #e2e8f0;
     --zf-nav-active-border: #2563eb;
     --zf-table-header-bg: #f8fafc;
@@ -131,18 +132,20 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
   }
 
-  code, kbd, samp, pre {
+  code,
+  kbd,
+  samp,
+  pre {
     font-family: var(--font-mono);
   }
 }
 
-/* =========================================================================
-   MASTER PALETTE 5: SOLARIS PURE LIGHT (SURGICAL DAYLIGHT)
-   Transforms all hardcoded dark components into crisp daylight presentation
-   ========================================================================= */
+/* Overrides that map hard-coded dark utility classes onto theme 5. */
 
 [data-theme="solaris-daylight"] {
   color-scheme: light;
@@ -153,7 +156,6 @@
   color: #0f172a !important;
 }
 
-/* Transform all dark surfaces, cards, and containers to clean white/porcelain */
 [data-theme="solaris-daylight"] .bg-\[\#080c14\],
 [data-theme="solaris-daylight"] .bg-\[\#090d16\],
 [data-theme="solaris-daylight"] .bg-\[\#060911\],
@@ -212,7 +214,6 @@
   color: #0f172a !important;
 }
 
-/* Secondary daylight card fills and hovers */
 [data-theme="solaris-daylight"] .bg-slate-900\/60,
 [data-theme="solaris-daylight"] .bg-slate-900\/40,
 [data-theme="solaris-daylight"] .bg-slate-800\/80,
@@ -224,7 +225,6 @@
   color: #0f172a !important;
 }
 
-/* Soft semantic pastel badges for daylight */
 [data-theme="solaris-daylight"] .bg-cyan-950\/40,
 [data-theme="solaris-daylight"] .bg-cyan-950\/60,
 [data-theme="solaris-daylight"] .bg-cyan-950\/70,
@@ -261,7 +261,6 @@
   border-color: #a7f3d0 !important;
 }
 
-/* Table header & structural bar styling in daylight */
 [data-theme="solaris-daylight"] thead,
 [data-theme="solaris-daylight"] thead tr,
 [data-theme="solaris-daylight"] thead th {
@@ -278,7 +277,6 @@
   background-color: #f8fafc !important;
 }
 
-/* Structural borders in daylight */
 [data-theme="solaris-daylight"] .border-slate-800,
 [data-theme="solaris-daylight"] .border-slate-800\/90,
 [data-theme="solaris-daylight"] .border-slate-800\/80,
@@ -302,7 +300,6 @@
   border-color: #e2e8f0 !important;
 }
 
-/* Primary and secondary text conversion in daylight */
 [data-theme="solaris-daylight"] .text-slate-100,
 [data-theme="solaris-daylight"] .text-slate-200,
 [data-theme="solaris-daylight"] .text-slate-300,
@@ -328,7 +325,6 @@
   color: #94a3b8 !important;
 }
 
-/* Daylight vibrant text markers */
 [data-theme="solaris-daylight"] .text-cyan-400,
 [data-theme="solaris-daylight"] .text-cyan-300 {
   color: #0284c7 !important;
@@ -349,7 +345,6 @@
   color: #059669 !important;
 }
 
-/* Daylight code blocks, badges and inputs */
 [data-theme="solaris-daylight"] code,
 [data-theme="solaris-daylight"] pre {
   background-color: #f1f5f9 !important;
@@ -370,11 +365,7 @@
   border-color: #cbd5e1 !important;
 }
 
-
-/* =========================================================================
-   MASTER PALETTE 2: COBALT SPECTRE (DEEP ABYSSAL NAVY & ELECTRIC AZURE)
-   Transforms all surfaces into rich navy sapphire operations console
-   ========================================================================= */
+/* Overrides that map hard-coded dark utility classes onto theme 2. */
 
 [data-theme="midnight-phantom"] body {
   background-color: #030718 !important;
@@ -419,11 +410,7 @@
   color: #38bdf8 !important;
 }
 
-
-/* =========================================================================
-   MASTER PALETTE 3: VIPER CYBERPUNK (PHOSPHOR MATRIX & TOXIC EMERALD)
-   Transforms all surfaces into radioactive DEFCON phosphor green CRT terminal
-   ========================================================================= */
+/* Overrides that map hard-coded dark utility classes onto theme 3. */
 
 [data-theme="matrix-terminal"] body {
   background-color: #010a04 !important;
@@ -475,11 +462,7 @@
   color: #ecfdf5 !important;
 }
 
-
-/* =========================================================================
-   MASTER PALETTE 4: KITSUNE NEON (TOKYO SYNTHWAVE & HOT MAGENTA ROSE)
-   Transforms all surfaces into high-voltage Tokyo after-hours violet & rose
-   ========================================================================= */
+/* Overrides that map hard-coded dark utility classes onto theme 4. */
 
 [data-theme="tokyo-cyberpunk"] body {
   background-color: #0c0217 !important;
@@ -531,8 +514,6 @@
   color: #fff1f2 !important;
 }
 
-
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

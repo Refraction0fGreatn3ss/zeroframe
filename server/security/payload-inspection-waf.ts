@@ -20,11 +20,7 @@ function matchValue(value: unknown): ExploitRule | null {
 }
 
 function findExploit(req: Request): ExploitRule | null {
-  return (
-    matchText(decodeURIComponent(req.originalUrl || req.url)) ??
-    matchValue(req.query) ??
-    matchValue(req.body)
-  );
+  return matchText(decodeURIComponent(req.originalUrl || req.url)) ?? matchValue(req.query) ?? matchValue(req.body);
 }
 
 export function payloadInspectionWafMiddleware(req: Request, res: Response, next: NextFunction) {

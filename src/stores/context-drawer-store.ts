@@ -1,21 +1,7 @@
-/**
- * Universal Context Drawer Store
- * Enables one-click pivots across IPs, Assets, Users, Detectors, Sensors, and Evidence
- * without destroying the analyst's current investigation context.
- * Maintains full Back / Forward investigation history trail.
- */
+import { createStore, useStore } from '../lib/create-store';
+import type { ContextItem } from '../types/context-drawer';
 
-import { useState, useEffect } from 'react';
-
-export type ContextType = 'IP' | 'ASSET' | 'USER' | 'DETECTOR' | 'SENSOR' | 'EVIDENCE' | 'MITRE' | 'TRUTH_PROOF';
-
-export interface ContextItem {
-  type: ContextType;
-  id: string;
-  title: string;
-  subtitle?: string;
-  data?: any;
-}
+export type { ContextItem, ContextItemData, ContextType } from '../types/context-drawer';
 
 interface ContextDrawerState {
   isOpen: boolean;
@@ -23,84 +9,57 @@ interface ContextDrawerState {
   currentIndex: number;
 }
 
-let drawerGlobalState: ContextDrawerState = {
+const drawerStore = createStore<ContextDrawerState>({
   isOpen: false,
   history: [],
   currentIndex: -1,
-};
+});
 
-const listeners = new Set<(state: ContextDrawerState) => void>();
-
-function notify() {
-  listeners.forEach((l) => l({ ...drawerGlobalState }));
+function canGoBack(state: ContextDrawerState): boolean {
+  return state.currentIndex > 0;
 }
 
+function canGoForward(state: ContextDrawerState): boolean {
+  return state.currentIndex < state.history.length - 1;
+}
+
+function getCurrentItem(state: ContextDrawerState): ContextItem | null {
+  return state.currentIndex >= 0 ? state.history[state.currentIndex] : null;
+}
+
+export const drawerActions = {
+  openContext(item: ContextItem) {
+    drawerStore.setState((state) => {
+      // Opening a new item discards any forward history, like browser navigation.
+      const history = [...state.history.slice(0, state.currentIndex + 1), item];
+      return { isOpen: true, history, currentIndex: history.length - 1 };
+    });
+  },
+
+  closeDrawer() {
+    drawerStore.setState({ isOpen: false });
+  },
+
+  goBack() {
+    if (canGoBack(drawerStore.getState())) {
+      drawerStore.setState((state) => ({ currentIndex: state.currentIndex - 1 }));
+    }
+  },
+
+  goForward() {
+    if (canGoForward(drawerStore.getState())) {
+      drawerStore.setState((state) => ({ currentIndex: state.currentIndex + 1 }));
+    }
+  },
+};
+
 export function useDrawerStore() {
-  const [state, setState] = useState<ContextDrawerState>(drawerGlobalState);
-
-  useEffect(() => {
-    listeners.add(setState);
-    return () => {
-      listeners.delete(setState);
-    };
-  }, []);
-
-  const openContext = (item: ContextItem) => {
-    // If opening a new item, truncate any forward history
-    const newHistory = drawerGlobalState.history.slice(0, drawerGlobalState.currentIndex + 1);
-    newHistory.push(item);
-
-    drawerGlobalState = {
-      isOpen: true,
-      history: newHistory,
-      currentIndex: newHistory.length - 1,
-    };
-    notify();
-  };
-
-  const closeDrawer = () => {
-    drawerGlobalState = {
-      ...drawerGlobalState,
-      isOpen: false,
-    };
-    notify();
-  };
-
-  const goBack = () => {
-    if (drawerGlobalState.currentIndex > 0) {
-      drawerGlobalState = {
-        ...drawerGlobalState,
-        currentIndex: drawerGlobalState.currentIndex - 1,
-      };
-      notify();
-    }
-  };
-
-  const goForward = () => {
-    if (drawerGlobalState.currentIndex < drawerGlobalState.history.length - 1) {
-      drawerGlobalState = {
-        ...drawerGlobalState,
-        currentIndex: drawerGlobalState.currentIndex + 1,
-      };
-      notify();
-    }
-  };
-
-  const currentItem = drawerGlobalState.currentIndex >= 0
-    ? drawerGlobalState.history[drawerGlobalState.currentIndex]
-    : null;
-
-  const canGoBack = drawerGlobalState.currentIndex > 0;
-  const canGoForward = drawerGlobalState.currentIndex < drawerGlobalState.history.length - 1;
-
+  const state = useStore(drawerStore);
   return {
     ...state,
-    currentItem,
-    canGoBack,
-    canGoForward,
-    openContext,
-    closeDrawer,
-    goBack,
-    goForward,
+    currentItem: getCurrentItem(state),
+    canGoBack: canGoBack(state),
+    canGoForward: canGoForward(state),
+    ...drawerActions,
   };
 }

@@ -1,6 +1,6 @@
-import type { IncomingMessage, Server } from 'http';
-import type { Duplex } from 'stream';
-import { WebSocket, WebSocketServer } from 'ws';
+import type { IncomingMessage, Server } from 'node:http';
+import type { Duplex } from 'node:stream';
+import { type WebSocket, WebSocketServer } from 'ws';
 import {
   DEFAULT_TENANT_ID,
   WEBSOCKET_AUTH_TIMEOUT_MS,
@@ -10,7 +10,7 @@ import {
 import { sessionStore } from '../stores/session-store.ts';
 import { tenantStore } from '../stores/tenant-store.ts';
 import type { OperatorSession } from '../types/session.ts';
-import { clientRegistry, type ConnectedClient } from './client-registry.ts';
+import { type ConnectedClient, clientRegistry } from './client-registry.ts';
 import { extractUpgradeToken, isOriginAllowed } from './upgrade-guard.ts';
 
 const UNAUTHORIZED_CLOSE_CODE = 4401;

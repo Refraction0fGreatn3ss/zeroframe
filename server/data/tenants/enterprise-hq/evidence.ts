@@ -29,7 +29,28 @@ export const pcapCaptures = [
 ];
 
 export const witnessNodes = [
-  { id: 'WITNESS-HQ-01', location: 'DC-East Ashburn', state: 'ONLINE', role: 'LEADER', quorumMember: true, latencyMs: 1.2 },
-  { id: 'WITNESS-HQ-02', location: 'DC-Central Chicago', state: 'ONLINE', role: 'FOLLOWER', quorumMember: true, latencyMs: 14.8 },
-  { id: 'WITNESS-HQ-03', location: 'DC-West Hillsboro', state: 'ONLINE', role: 'FOLLOWER', quorumMember: true, latencyMs: 28.4 },
+  {
+    id: 'WITNESS-HQ-01',
+    location: 'DC-East Ashburn',
+    state: 'ONLINE',
+    role: 'LEADER',
+    quorumMember: true,
+    latencyMs: 1.2,
+  },
+  {
+    id: 'WITNESS-HQ-02',
+    location: 'DC-Central Chicago',
+    state: 'ONLINE',
+    role: 'FOLLOWER',
+    quorumMember: true,
+    latencyMs: 14.8,
+  },
+  {
+    id: 'WITNESS-HQ-03',
+    location: 'DC-West Hillsboro',
+    state: 'ONLINE',
+    role: 'FOLLOWER',
+    quorumMember: true,
+    latencyMs: 28.4,
+  },
 ];

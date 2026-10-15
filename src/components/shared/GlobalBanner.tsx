@@ -1,18 +1,30 @@
-/**
- * Restrained Enterprise Operational Banner
- * Compact warning strip for active kill-switch, monitor-only mode, or disconnected realtime.
- */
-
-import React from 'react';
+import { AlertTriangle, ShieldAlert, WifiOff } from 'lucide-react';
+import type { FC, ReactNode } from 'react';
 import { useAppStore } from '../../stores/app-store';
-import { useDashboardStore } from '../../stores/dashboard-store';
-import { ShieldAlert, AlertTriangle, WifiOff } from 'lucide-react';
 
-export const GlobalBanner: React.FC = () => {
-  const { killSwitchEngaged, operatingMode, realtimeConnected, toggleKillSwitch } = useAppStore();
-  const { metrics } = useDashboardStore();
+interface OperationalBanner {
+  id: string;
+  icon: ReactNode;
+  style: string;
+  text: string;
+  actionText?: string;
+  onAction?: () => void;
+}
 
-  const banners = [];
+interface BannerConditions {
+  killSwitchEngaged: boolean;
+  realtimeConnected: boolean;
+  operatingMode: string;
+  onDisengageKillSwitch: () => void;
+}
+
+const getActiveBanners = ({
+  killSwitchEngaged,
+  realtimeConnected,
+  operatingMode,
+  onDisengageKillSwitch,
+}: BannerConditions): OperationalBanner[] => {
+  const banners: OperationalBanner[] = [];
 
   if (killSwitchEngaged) {
     banners.push({
@@ -21,7 +33,7 @@ export const GlobalBanner: React.FC = () => {
       style: 'bg-[#1a140a] border-b border-[#3d2c14] text-amber-300',
       text: 'Autonomous response kill-switch engaged — Automated containment actions are blocked at the controller.',
       actionText: 'Disengage',
-      onAction: toggleKillSwitch,
+      onAction: onDisengageKillSwitch,
     });
   }
 
@@ -61,21 +73,32 @@ export const GlobalBanner: React.FC = () => {
     });
   }
 
+  return banners;
+};
+
+export const GlobalBanner: FC = () => {
+  const { killSwitchEngaged, operatingMode, realtimeConnected, toggleKillSwitch } = useAppStore();
+
+  const banners = getActiveBanners({
+    killSwitchEngaged,
+    realtimeConnected,
+    operatingMode,
+    onDisengageKillSwitch: toggleKillSwitch,
+  });
+
   if (banners.length === 0) return null;
 
   return (
     <div className="flex flex-col z-30">
       {banners.map((b) => (
-        <div
-          key={b.id}
-          className={`px-4 py-1.5 text-xs flex items-center justify-between font-sans ${b.style}`}
-        >
+        <div key={b.id} className={`px-4 py-1.5 text-xs flex items-center justify-between font-sans ${b.style}`}>
           <div className="flex items-center gap-2">
             {b.icon}
             <span className="text-xs">{b.text}</span>
           </div>
           {b.actionText && (
             <button
+              type="button"
               onClick={b.onAction}
               className="ml-3 px-2 py-0.5 rounded text-[11px] font-medium bg-[#3d2c14] hover:bg-[#543d1a] text-amber-200 transition-colors cursor-pointer"
             >

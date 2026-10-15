@@ -1,7 +1,4 @@
-/**
- * ZeroFrame Governed Response & Permits Service
- */
-
+import type { QuarantinePayload, RollbackPayload, RollbackResultPayload } from '../types/api-payloads';
 import { apiClient } from './api-client';
 
 export interface ExecutionPermitRecord {
@@ -21,39 +18,48 @@ export interface ExecutionPermitRecord {
   tenantId: string;
 }
 
+export interface PermitRequest {
+  actionType: string;
+  targetResource: string;
+  reason: string;
+  compensatingControl?: string;
+}
+
 export const responseService = {
   async getPermits(): Promise<ExecutionPermitRecord[]> {
     const res = await apiClient.get<{ permits: ExecutionPermitRecord[] }>('/response/permits');
     return res.data.permits;
   },
 
-  async issuePermit(permit: { actionType: string; targetResource: string; reason: string; compensatingControl?: string }): Promise<ExecutionPermitRecord> {
+  async issuePermit(permit: PermitRequest): Promise<ExecutionPermitRecord> {
     const res = await apiClient.post<{ success: boolean; permit: ExecutionPermitRecord }>('/response/permits', permit);
     return res.data.permit;
   },
 
   async approvePermit(permitId: string): Promise<ExecutionPermitRecord> {
-    const res = await apiClient.post<{ success: boolean; permit: ExecutionPermitRecord }>(`/response/permits/${permitId}/approve`);
+    const res = await apiClient.post<{ success: boolean; permit: ExecutionPermitRecord }>(
+      `/response/permits/${permitId}/approve`,
+    );
     return res.data.permit;
   },
 
-  async getQuarantineHosts(): Promise<any[]> {
-    const res = await apiClient.get<{ quarantine: any[] }>('/response/quarantine');
+  async getQuarantineHosts(): Promise<QuarantinePayload[]> {
+    const res = await apiClient.get<{ quarantine: QuarantinePayload[] }>('/response/quarantine');
     return res.data.quarantine;
   },
 
-  async getRollbacks(): Promise<any[]> {
-    const res = await apiClient.get<{ rollbacks: any[] }>('/response/rollback');
+  async getRollbacks(): Promise<RollbackPayload[]> {
+    const res = await apiClient.get<{ rollbacks: RollbackPayload[] }>('/response/rollback');
     return res.data.rollbacks;
   },
 
-  async liftQuarantine(id: string): Promise<any> {
-    const res = await apiClient.post<any>(`/response/quarantine/${id}/lift`);
+  async liftQuarantine(id: string): Promise<RollbackResultPayload> {
+    const res = await apiClient.post<RollbackResultPayload>(`/response/quarantine/${id}/lift`);
     return res.data;
   },
 
-  async executeRollback(id: string): Promise<any> {
-    const res = await apiClient.post<any>(`/response/rollback/${id}`);
+  async executeRollback(id: string): Promise<RollbackResultPayload> {
+    const res = await apiClient.post<RollbackResultPayload>(`/response/rollback/${id}`);
     return res.data;
   },
 };

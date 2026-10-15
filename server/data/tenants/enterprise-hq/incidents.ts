@@ -2,7 +2,8 @@ export const incidents = [
   {
     id: 'INC-2026-0881',
     title: 'Adversary Multi-Stage Lateral Movement & Ransomware Staging',
-    plainEnglishSummary: 'A compromised workstation (10.140.2.88) is scanning internal servers and attempting to spread malicious commands to the accounting file server.',
+    plainEnglishSummary:
+      'A compromised workstation (10.140.2.88) is scanning internal servers and attempting to spread malicious commands to the accounting file server.',
     severity: 'CRITICAL',
     state: 'OPEN',
     firstSeen: new Date(Date.now() - 1000 * 60 * 42).toISOString(),
@@ -23,9 +24,27 @@ export const incidents = [
     fidelity: 'DEEP_PACKET',
     confidenceScore: 94,
     mitreTactics: [
-      { id: 'T1021.002', name: 'SMB/Windows Admin Shares', technique: 'PsExec Service Installation', techniqueId: 'T1021.002', stage: 'Lateral Movement' },
-      { id: 'T1558.003', name: 'Kerberoasting', technique: 'SPN Ticket Request Spike', techniqueId: 'T1558.003', stage: 'Credential Access' },
-      { id: 'T1486', name: 'Data Encrypted for Impact', technique: 'Rapid Canary File Renames', techniqueId: 'T1486', stage: 'Impact' },
+      {
+        id: 'T1021.002',
+        name: 'SMB/Windows Admin Shares',
+        technique: 'PsExec Service Installation',
+        techniqueId: 'T1021.002',
+        stage: 'Lateral Movement',
+      },
+      {
+        id: 'T1558.003',
+        name: 'Kerberoasting',
+        technique: 'SPN Ticket Request Spike',
+        techniqueId: 'T1558.003',
+        stage: 'Credential Access',
+      },
+      {
+        id: 'T1486',
+        name: 'Data Encrypted for Impact',
+        technique: 'Rapid Canary File Renames',
+        techniqueId: 'T1486',
+        stage: 'Impact',
+      },
     ],
     associatedAlertIds: ['ALT-9901', 'ALT-9902', 'ALT-9903'],
     evidenceIds: ['EVD-PCAP-0881', 'EVD-LEDGER-0881'],
@@ -35,7 +54,8 @@ export const incidents = [
   {
     id: 'INC-2026-0880',
     title: 'Outbound High-Entropy DNS Data Exfiltration Tunnel',
-    plainEnglishSummary: 'An internal server (10.140.10.14) is smuggling encrypted data out of the network disguised as DNS website lookups.',
+    plainEnglishSummary:
+      'An internal server (10.140.10.14) is smuggling encrypted data out of the network disguised as DNS website lookups.',
     severity: 'HIGH',
     state: 'OPEN',
     firstSeen: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
@@ -55,8 +75,20 @@ export const incidents = [
     fidelity: 'DEEP_PACKET',
     confidenceScore: 89,
     mitreTactics: [
-      { id: 'T1071.004', name: 'DNS Tunneling', technique: 'Base64 TXT Records', techniqueId: 'T1071.004', stage: 'Command and Control' },
-      { id: 'T1048', name: 'Exfiltration Over Alternative Protocol', technique: 'DNS Payload Tunnel', techniqueId: 'T1048', stage: 'Exfiltration' },
+      {
+        id: 'T1071.004',
+        name: 'DNS Tunneling',
+        technique: 'Base64 TXT Records',
+        techniqueId: 'T1071.004',
+        stage: 'Command and Control',
+      },
+      {
+        id: 'T1048',
+        name: 'Exfiltration Over Alternative Protocol',
+        technique: 'DNS Payload Tunnel',
+        techniqueId: 'T1048',
+        stage: 'Exfiltration',
+      },
     ],
     associatedAlertIds: ['ALT-9871'],
     evidenceIds: ['EVD-PCAP-0880'],
@@ -66,7 +98,8 @@ export const incidents = [
   {
     id: 'INC-2026-0879',
     title: 'Cobalt Strike Malleable C2 Beaconing Pattern',
-    plainEnglishSummary: 'Repeated periodic beacon calls matching known adversary command servers observed with jitter obfuscation.',
+    plainEnglishSummary:
+      'Repeated periodic beacon calls matching known adversary command servers observed with jitter obfuscation.',
     severity: 'HIGH',
     state: 'INVESTIGATING',
     firstSeen: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
@@ -81,7 +114,13 @@ export const incidents = [
     fidelity: 'WIRE_METADATA',
     confidenceScore: 87,
     mitreTactics: [
-      { id: 'T1071.001', name: 'Web Protocols', technique: 'HTTPS C2 Beaconing', techniqueId: 'T1071.001', stage: 'Command and Control' },
+      {
+        id: 'T1071.001',
+        name: 'Web Protocols',
+        technique: 'HTTPS C2 Beaconing',
+        techniqueId: 'T1071.001',
+        stage: 'Command and Control',
+      },
     ],
     associatedAlertIds: ['ALT-9850'],
     evidenceIds: ['EVD-PCAP-0879'],

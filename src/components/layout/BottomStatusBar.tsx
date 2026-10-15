@@ -1,52 +1,34 @@
-/**
- * Quiet Enterprise Utility & Keyboard Helper Footer
- * 
- * Replaces ornamental fake telemetry tickers with actual operational helpers:
- * - Keyboard shortcut discovery (/ for Command Bar, ? for Shortcuts)
- * - Active isolation tenant indicator
- * - Dynamic security inactivity compliance policy
- */
-
-import React from 'react';
-import { useTenantStore } from '../../stores/tenant-store';
+import { ShieldCheck } from 'lucide-react';
+import type React from 'react';
 import { useAuthStore } from '../../stores/auth-store';
-import { ShieldCheck, Command } from 'lucide-react';
+
+const SHORTCUT_KEY_CLASS =
+  'px-1 py-0.2 rounded bg-[var(--zf-surface-tertiary)] border border-[var(--zf-border-subtle)] text-[10px] text-[var(--zf-text-primary)]';
 
 export const BottomStatusBar: React.FC = () => {
-  const { currentTenant } = useTenantStore();
   const { inactivityPolicy } = useAuthStore();
 
   return (
     <footer className="h-6 border-t border-[var(--zf-border-subtle)] bg-[var(--zf-surface-topbar)] px-3.5 flex items-center justify-between text-[11px] font-mono text-[var(--zf-text-muted)] select-none shrink-0 z-20">
-      {/* Left: Keyboard-first navigation cues */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5 text-[var(--zf-text-secondary)]">
-          <kbd className="px-1 py-0.2 rounded bg-[var(--zf-surface-tertiary)] border border-[var(--zf-border-subtle)] text-[10px] text-[var(--zf-text-primary)]">
-            /
-          </kbd>
+          <kbd className={SHORTCUT_KEY_CLASS}>/</kbd>
           <span>Command Palette</span>
         </div>
         <span className="text-[var(--zf-border-medium)]">·</span>
         <div className="hidden sm:flex items-center gap-1.5 text-[var(--zf-text-secondary)]">
-          <kbd className="px-1 py-0.2 rounded bg-[var(--zf-surface-tertiary)] border border-[var(--zf-border-subtle)] text-[10px] text-[var(--zf-text-primary)]">
-            ?
-          </kbd>
+          <kbd className={SHORTCUT_KEY_CLASS}>?</kbd>
           <span>Shortcuts</span>
         </div>
         <span className="text-[var(--zf-border-medium)] hidden sm:inline">·</span>
         <div className="hidden md:flex items-center gap-1.5 text-[var(--zf-text-secondary)]">
-          <kbd className="px-1 py-0.2 rounded bg-[var(--zf-surface-tertiary)] border border-[var(--zf-border-subtle)] text-[10px] text-[var(--zf-text-primary)]">
-            g
-          </kbd>
+          <kbd className={SHORTCUT_KEY_CLASS}>g</kbd>
           <span>+</span>
-          <kbd className="px-1 py-0.2 rounded bg-[var(--zf-surface-tertiary)] border border-[var(--zf-border-subtle)] text-[10px] text-[var(--zf-text-primary)]">
-            i
-          </kbd>
+          <kbd className={SHORTCUT_KEY_CLASS}>i</kbd>
           <span>Jump to Incidents</span>
         </div>
       </div>
 
-      {/* Right: Operational Scope & Compliance Baseline */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5">
           <span className="text-[var(--zf-text-muted)]">Capture Tap:</span>

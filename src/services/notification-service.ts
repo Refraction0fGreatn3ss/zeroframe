@@ -1,10 +1,5 @@
-/**
- * ZeroFrame Notification Service
- * Handles 15 notification categories, deduplication, acknowledgment, clear-all
- */
-
+import type { ZeroFlashNotification } from '../types/notifications';
 import { apiClient } from './api-client';
-import { ZeroFlashNotification } from '../types/notifications';
 
 export const notificationService = {
   async getNotifications(): Promise<ZeroFlashNotification[]> {

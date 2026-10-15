@@ -1,8 +1,3 @@
-/**
- * ZeroFlash Notification System Types
- * Covers all 15 operational security categories
- */
-
 export type NotificationCategory =
   | 'SECURITY'
   | 'INCIDENT'
@@ -30,6 +25,6 @@ export interface ZeroFlashNotification {
   read: boolean;
   acknowledged: boolean;
   deepLink?: string;
-  fingerprintHash: string; // Used for deduplication
+  fingerprintHash: string;
   tenantId: string;
 }

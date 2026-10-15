@@ -1,37 +1,44 @@
-/**
- * Universal Utility Helpers for ZeroFlash Enterprise
- */
+type ClassDictionary = { [className: string]: boolean };
+type ClassValue = string | boolean | undefined | null | ClassDictionary;
 
-export function cn(...classes: (string | boolean | undefined | null | { [key: string]: boolean })[]): string {
-  const result: string[] = [];
-  for (const item of classes) {
-    if (!item) continue;
-    if (typeof item === 'string') {
-      result.push(item);
-    } else if (typeof item === 'object') {
-      for (const [key, val] of Object.entries(item)) {
-        if (val) result.push(key);
+const BYTES_PER_KIBIBYTE = 1024;
+const BITS_PER_KILOBIT = 1000;
+const BYTE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+const BIT_RATE_UNITS = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps'];
+
+const SECONDS_PER_MINUTE = 60;
+const SECONDS_PER_HOUR = 3600;
+const SECONDS_PER_DAY = 86400;
+const MS_PER_SECOND = 1000;
+
+export function cn(...classes: ClassValue[]): string {
+  const classNames: string[] = [];
+  for (const value of classes) {
+    if (!value) continue;
+    if (typeof value === 'string') {
+      classNames.push(value);
+    } else if (typeof value === 'object') {
+      for (const [className, enabled] of Object.entries(value)) {
+        if (enabled) classNames.push(className);
       }
     }
   }
-  return result.join(' ');
+  return classNames.join(' ');
+}
+
+function formatWithUnits(value: number, base: number, units: string[], decimals: number): string {
+  const unitIndex = Math.floor(Math.log(value) / Math.log(base));
+  return `${parseFloat((value / base ** unitIndex).toFixed(decimals))} ${units[unitIndex]}`;
 }
 
 export function formatBytes(bytes: number, decimals = 1): string {
   if (bytes === 0) return '0 B';
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  return formatWithUnits(bytes, BYTES_PER_KIBIBYTE, BYTE_UNITS, Math.max(0, decimals));
 }
 
 export function formatBitsPerSec(bps: number): string {
   if (bps === 0) return '0 bps';
-  const k = 1000;
-  const sizes = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps'];
-  const i = Math.floor(Math.log(bps) / Math.log(k));
-  return parseFloat((bps / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  return formatWithUnits(bps, BITS_PER_KILOBIT, BIT_RATE_UNITS, 1);
 }
 
 export function formatNumber(num: number): string {
@@ -40,9 +47,12 @@ export function formatNumber(num: number): string {
 
 export function formatTimestamp(isoString: string): string {
   try {
-    const d = new Date(isoString);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) +
-      ' ' + d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    const date = new Date(isoString);
+    return (
+      date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) +
+      ' ' +
+      date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+    );
   } catch {
     return isoString;
   }
@@ -50,11 +60,11 @@ export function formatTimestamp(isoString: string): string {
 
 export function timeAgo(isoString: string): string {
   try {
-    const diff = (Date.now() - new Date(isoString).getTime()) / 1000;
-    if (diff < 60) return `${Math.floor(diff)}s ago`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
+    const elapsedSeconds = (Date.now() - new Date(isoString).getTime()) / MS_PER_SECOND;
+    if (elapsedSeconds < SECONDS_PER_MINUTE) return `${Math.floor(elapsedSeconds)}s ago`;
+    if (elapsedSeconds < SECONDS_PER_HOUR) return `${Math.floor(elapsedSeconds / SECONDS_PER_MINUTE)}m ago`;
+    if (elapsedSeconds < SECONDS_PER_DAY) return `${Math.floor(elapsedSeconds / SECONDS_PER_HOUR)}h ago`;
+    return `${Math.floor(elapsedSeconds / SECONDS_PER_DAY)}d ago`;
   } catch {
     return isoString;
   }

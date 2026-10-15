@@ -1,8 +1,3 @@
-/**
- * Compliance Frameworks and Evidence Grounding Types
- * Rule: NEVER claim "compliant" if evidence is missing or stale.
- */
-
 export type ComplianceEvidenceState =
   | 'CURRENT'
   | 'STALE'
@@ -15,14 +10,7 @@ export type ComplianceEvidenceState =
 export interface ComplianceControl {
   controlId: string;
   name: string;
-  framework:
-    | 'UAE_IAR'
-    | 'QATAR_NIA'
-    | 'SAUDI_NCA_ECC'
-    | 'NIST_CSF_2_0'
-    | 'PCI_DSS_4_0_1'
-    | 'NIS2'
-    | 'SOC2_TSC';
+  framework: 'UAE_IAR' | 'QATAR_NIA' | 'SAUDI_NCA_ECC' | 'NIST_CSF_2_0' | 'PCI_DSS_4_0_1' | 'NIS2' | 'SOC2_TSC';
   domain: string;
   description: string;
   evidenceState: ComplianceEvidenceState;
@@ -32,6 +20,7 @@ export interface ComplianceControl {
   evidenceIds: string[];
 }
 
+// Never report a framework as compliant when its evidence is missing or stale.
 export interface ComplianceFrameworkSummary {
   id: string;
   name: string;

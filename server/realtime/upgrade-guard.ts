@@ -1,4 +1,4 @@
-import type { IncomingMessage } from 'http';
+import type { IncomingMessage } from 'node:http';
 import { sessionStore } from '../stores/session-store.ts';
 
 const TRUSTED_ORIGIN_FRAGMENTS = ['localhost', '127.0.0.1', '.run.app', '.google.com'];
@@ -38,9 +38,6 @@ export function extractUpgradeToken(request: IncomingMessage, url: URL): string 
   const protocolToken = protocolHeader ? tokenFromProtocols(protocolHeader) : undefined;
 
   return (
-    protocolToken ||
-    url.searchParams.get('token') ||
-    tokenFromAuthorizationHeader(request.headers.authorization) ||
-    ''
+    protocolToken || url.searchParams.get('token') || tokenFromAuthorizationHeader(request.headers.authorization) || ''
   );
 }

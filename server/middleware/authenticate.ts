@@ -7,7 +7,7 @@ const BEARER_PREFIX = 'Bearer ';
 
 function extractBearerToken(req: Request): string | null {
   const header = req.headers.authorization;
-  if (!header || !header.startsWith(BEARER_PREFIX)) return null;
+  if (!header?.startsWith(BEARER_PREFIX)) return null;
   return header.substring(BEARER_PREFIX.length).trim();
 }
 

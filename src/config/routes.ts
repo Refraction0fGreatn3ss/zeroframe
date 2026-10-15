@@ -1,18 +1,15 @@
-/**
- * Navigation & Route Definitions for ZeroFlash Enterprise 1.0
- * Grouped into: Overview, Investigate, Respond, Evidence, System
- */
+export interface NavItem {
+  id: string;
+  label: string;
+  path: string;
+  badgeCountKey?: string;
+  warningKey?: string;
+  description: string;
+}
 
 export interface NavSection {
   title: string;
-  items: {
-    id: string;
-    label: string;
-    path: string;
-    badgeCountKey?: string;
-    warningKey?: string;
-    description: string;
-  }[];
+  items: NavItem[];
 }
 
 export const NAVIGATION_STRUCTURE: NavSection[] = [

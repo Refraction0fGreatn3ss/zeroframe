@@ -1,19 +1,14 @@
-/**
- * ZeroFrame Enterprise 1.0 Entry Point
- * Implements Strict Auth Gate & Session Management
- */
-
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import { AppShell } from './components/layout/app-shell/AppShell';
+import { LoginPage } from './pages/login/LoginPage';
 import { useAuthStore } from './stores/auth-store';
-import { AppShell } from './components/layout/AppShell';
-import { LoginPage } from './pages/LoginPage';
 
 export default function App() {
-  const { isAuthenticated, validateSession, isLoading } = useAuthStore();
+  const { isAuthenticated, validateSession } = useAuthStore();
 
   useEffect(() => {
     validateSession();
-  }, []);
+  }, [validateSession]);
 
   if (!isAuthenticated) {
     return <LoginPage />;

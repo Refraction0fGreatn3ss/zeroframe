@@ -51,7 +51,11 @@ export function issuePermit(tenant: TenantContext, session: OperatorSession, req
   return permit;
 }
 
-export function approvePermit(tenant: TenantContext, session: OperatorSession, permitId: string): ExecutionPermit | null {
+export function approvePermit(
+  tenant: TenantContext,
+  session: OperatorSession,
+  permitId: string,
+): ExecutionPermit | null {
   const permit = tenant.db.permits.find((candidate) => candidate.id === permitId);
   if (!permit) return null;
 

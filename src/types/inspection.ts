@@ -1,9 +1,4 @@
-/**
- * Inspection Integrity Types for ZeroFlash Enterprise
- * Tracks full observation path: CAPTURE -> L2 -> L3 -> TRANSPORT -> SESSION -> CRYPTO -> APPLICATION
- */
-
-import { InspectionStage, SecurityState, SourceFidelity } from './index';
+import type { InspectionStage, SecurityState } from './index';
 
 export interface InspectionStageDetail {
   stage: InspectionStage;

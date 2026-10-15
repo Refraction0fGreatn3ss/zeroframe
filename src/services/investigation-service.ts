@@ -1,10 +1,5 @@
-/**
- * ZeroFrame Investigation Service
- * Incidents, Alerts, Entities, MITRE Tactical Mappings
- */
-
+import type { LivingEntity, SecurityAlert, SecurityIncident } from '../types';
 import { apiClient } from './api-client';
-import { SecurityIncident, SecurityAlert, LivingEntity } from '../types';
 
 export const investigationService = {
   async getIncidents(): Promise<SecurityIncident[]> {
@@ -23,7 +18,10 @@ export const investigationService = {
   },
 
   async updateIncidentState(id: string, state: SecurityIncident['state']): Promise<SecurityIncident> {
-    const res = await apiClient.post<{ success: boolean; incident: SecurityIncident }>(`/investigation/incidents/${id}/state`, { state });
+    const res = await apiClient.post<{ success: boolean; incident: SecurityIncident }>(
+      `/investigation/incidents/${id}/state`,
+      { state },
+    );
     return res.data.incident;
   },
 };

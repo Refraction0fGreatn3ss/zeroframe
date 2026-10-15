@@ -1,198 +1,108 @@
-/**
- * Dashboard & Command Center Store
- * Powers both Simple SOC and Analyst SOC modes with identical backend truth.
- * Connected to Authoritative Backend & Realtime Engine.
- */
-
-import { useState, useEffect } from 'react';
-import { SecurityState } from '../types';
-import { dashboardService, SecurityChartsData } from '../services/dashboard-service';
+import { DEFAULT_METRICS } from '../data/dashboard.data';
+import { createStore, useStore } from '../lib/create-store';
+import { getErrorMessage } from '../lib/error-message';
+import { dashboardService, type SecurityChartsData } from '../services/dashboard-service';
 import { realtimeClient } from '../services/realtime-client';
+import {
+  applyTelemetryPulse,
+  applyThroughputSample,
+  type CommandCenterMetrics,
+  type TelemetryPulsePayload,
+} from './dashboard-store/command-center-metrics';
 import { tenantRegistry } from './tenant-registry';
 
-export interface CommandCenterMetrics {
-  totalKnownEntities: number;
-  knownSubnets: number;
-  criticalProtectedAssets: number;
-  otDevicesCount: number;
+export type { CommandCenterMetrics };
 
-  observationCoveragePct: number;
-  activeObservationPoints: number;
-  captureState: SecurityState;
-  sourceFidelityLevel: 'DEEP_PACKET' | 'WIRE_METADATA' | 'FLOW' | 'PARTIAL';
-  asymmetricTrafficRatio: number;
-  currentIngressThroughputBps: number;
-  currentPacketRatePps: number;
-  kernelDropPps: number;
-  uninspectedBytesRatio: number;
+type FreshnessState = 'FRESH' | 'STALE' | 'ERROR';
 
-  activeDetectorsTotal: number;
-  detectorsHealthy: number;
-  detectorsDegraded: number;
-  detectorsUnavailable: number;
-  liveAssuranceState: SecurityState;
-  lastCanaryAuditTime: string;
-
-  openIncidentsCount: number;
-  criticalIncidentsCount: number;
-  highIncidentsCount: number;
-  containedTodayCount: number;
-
-  sensorsOnline: number;
-  sensorsTotal: number;
-  witnessNodesHealthy: number;
-  witnessNodesTotal: number;
-  governedResponseKillSwitch: boolean;
+interface DashboardState {
+  metrics: CommandCenterMetrics;
+  charts: SecurityChartsData | null;
+  isLoading: boolean;
+  loadError: string | null;
+  freshnessState: FreshnessState;
+  lastSyncTimestamp: string | null;
 }
 
-const DEFAULT_METRICS: CommandCenterMetrics = {
-  totalKnownEntities: 0,
-  knownSubnets: 0,
-  criticalProtectedAssets: 0,
-  otDevicesCount: 0,
-  observationCoveragePct: 0,
-  activeObservationPoints: 0,
-  captureState: 'UNKNOWN',
-  sourceFidelityLevel: 'DEEP_PACKET',
-  asymmetricTrafficRatio: 0,
-  currentIngressThroughputBps: 0,
-  currentPacketRatePps: 0,
-  kernelDropPps: 0,
-  uninspectedBytesRatio: 0,
-  activeDetectorsTotal: 0,
-  detectorsHealthy: 0,
-  detectorsDegraded: 0,
-  detectorsUnavailable: 0,
-  liveAssuranceState: 'UNKNOWN',
-  lastCanaryAuditTime: new Date().toISOString(),
-  openIncidentsCount: 0,
-  criticalIncidentsCount: 0,
-  highIncidentsCount: 0,
-  containedTodayCount: 0,
-  sensorsOnline: 0,
-  sensorsTotal: 0,
-  witnessNodesHealthy: 0,
-  witnessNodesTotal: 0,
-  governedResponseKillSwitch: false,
-};
+const LOAD_ERROR_FALLBACK = 'Failed to fetch dashboard metrics from backend authority';
 
-let metricsState: CommandCenterMetrics = DEFAULT_METRICS;
-let chartsState: SecurityChartsData | null = null;
-let isLoadingMetrics = false;
-let loadError: string | null = null;
-let freshnessState: 'FRESH' | 'STALE' | 'ERROR' = 'FRESH';
-let lastSyncTimestamp: string | null = null;
+const dashboardStore = createStore<DashboardState>({
+  metrics: DEFAULT_METRICS,
+  charts: null,
+  isLoading: false,
+  loadError: null,
+  freshnessState: 'FRESH',
+  lastSyncTimestamp: null,
+});
 
-const listeners = new Set<() => void>();
+function updateMetrics(update: (metrics: CommandCenterMetrics) => CommandCenterMetrics) {
+  dashboardStore.setState((state) => ({ metrics: update(state.metrics) }));
+}
 
-function notify() {
-  listeners.forEach((l) => l());
+function setKillSwitch(engaged: boolean) {
+  updateMetrics((metrics) => ({ ...metrics, governedResponseKillSwitch: engaged }));
 }
 
 async function loadData() {
-  isLoadingMetrics = true;
-  notify();
+  dashboardStore.setState({ isLoading: true });
   try {
-    const [metrics, charts] = await Promise.all([
-      dashboardService.getMetrics(),
-      dashboardService.getCharts(),
-    ]);
-    metricsState = metrics;
-    chartsState = charts;
-    loadError = null;
-    freshnessState = 'FRESH';
-    lastSyncTimestamp = new Date().toISOString();
-  } catch (err: any) {
-    loadError = err?.message || 'Failed to fetch dashboard metrics from backend authority';
-    freshnessState = 'ERROR';
+    const [metrics, charts] = await Promise.all([dashboardService.getMetrics(), dashboardService.getCharts()]);
+    dashboardStore.setState({
+      metrics,
+      charts,
+      loadError: null,
+      freshnessState: 'FRESH',
+      lastSyncTimestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    dashboardStore.setState({
+      loadError: getErrorMessage(err, LOAD_ERROR_FALLBACK),
+      freshnessState: 'ERROR',
+    });
     console.warn('[Dashboard Store] Backend fetch error', err);
   } finally {
-    isLoadingMetrics = false;
-    notify();
+    dashboardStore.setState({ isLoading: false });
   }
 }
 
-// Initial load
 loadData();
 
-// Register with tenant isolation registry
 tenantRegistry.register(
-  () => {
-    metricsState = DEFAULT_METRICS;
-    chartsState = null;
-    notify();
-  },
+  () => dashboardStore.setState({ metrics: DEFAULT_METRICS, charts: null }),
   async () => {
     await loadData();
-  }
+  },
 );
 
-// Subscribe to authoritative realtime telemetry events
 realtimeClient.onMessage((msg) => {
   if (msg.type === 'TELEMETRY_PULSE') {
-    metricsState = {
-      ...metricsState,
-      currentIngressThroughputBps: msg.payload.currentIngressThroughputBps,
-      currentPacketRatePps: msg.payload.currentPacketRatePps,
-      kernelDropPps: msg.payload.kernelDropPps,
-      lastCanaryAuditTime: msg.payload.lastCanaryAuditTime || metricsState.lastCanaryAuditTime,
-    };
-    notify();
+    const pulse: TelemetryPulsePayload = msg.payload;
+    updateMetrics((metrics) => applyTelemetryPulse(metrics, pulse));
   } else if (msg.type === 'KILL_SWITCH_CHANGED') {
-    metricsState = {
-      ...metricsState,
-      governedResponseKillSwitch: msg.payload.governedResponseKillSwitch,
-    };
-    notify();
+    const { governedResponseKillSwitch }: { governedResponseKillSwitch: boolean } = msg.payload;
+    setKillSwitch(governedResponseKillSwitch);
   } else if (msg.type === 'INCIDENT_STATE_CHANGED' || msg.type === 'CANARY_VALIDATION_COMPLETED') {
     loadData();
   }
 });
 
+async function toggleKillSwitch(reason?: string) {
+  const next = !dashboardStore.getState().metrics.governedResponseKillSwitch;
+  setKillSwitch(next);
+  try {
+    await dashboardService.setKillSwitch(next, reason);
+  } catch {
+    setKillSwitch(!next);
+  }
+}
+
+export const dashboardActions = {
+  updateThroughput: (bps: number, pps: number, drops: number) =>
+    updateMetrics((metrics) => applyThroughputSample(metrics, bps, pps, drops)),
+  toggleKillSwitch,
+  refreshDashboard: () => loadData(),
+};
+
 export function useDashboardStore() {
-  const [, setTrigger] = useState(0);
-
-  useEffect(() => {
-    const handler = () => setTrigger((t) => t + 1);
-    listeners.add(handler);
-    return () => {
-      listeners.delete(handler);
-    };
-  }, []);
-
-  const updateThroughput = (bps: number, pps: number, drops: number) => {
-    metricsState.currentIngressThroughputBps = bps;
-    metricsState.currentPacketRatePps = pps;
-    metricsState.kernelDropPps = drops;
-    if (drops > 50) {
-      metricsState.captureState = 'DEGRADED';
-    }
-    notify();
-  };
-
-  const toggleKillSwitch = async (reason?: string) => {
-    const next = !metricsState.governedResponseKillSwitch;
-    metricsState.governedResponseKillSwitch = next;
-    notify();
-    try {
-      await dashboardService.setKillSwitch(next, reason);
-    } catch {
-      metricsState.governedResponseKillSwitch = !next;
-      notify();
-    }
-  };
-
-  const refreshDashboard = () => loadData();
-
-  return {
-    metrics: metricsState,
-    charts: chartsState,
-    isLoading: isLoadingMetrics,
-    loadError,
-    freshnessState,
-    lastSyncTimestamp,
-    updateThroughput,
-    toggleKillSwitch,
-    refreshDashboard,
-  };
+  return { ...useStore(dashboardStore), ...dashboardActions };
 }

@@ -17,10 +17,7 @@ function applyTrafficJitter(metrics: TenantMetrics): void {
     MIN_THROUGHPUT_BPS,
     metrics.currentIngressThroughputBps + randomJitter(50_000_000),
   );
-  metrics.currentPacketRatePps = Math.max(
-    MIN_PACKET_RATE_PPS,
-    metrics.currentPacketRatePps + randomJitter(8_000),
-  );
+  metrics.currentPacketRatePps = Math.max(MIN_PACKET_RATE_PPS, metrics.currentPacketRatePps + randomJitter(8_000));
 }
 
 function pulseAllTenants(): void {

@@ -1,48 +1,56 @@
-/**
- * ZeroFrame Realtime Engine Client
- * 
- * Manages WebSocket connectivity to `/ws/events`.
- * Guarantees:
- * - Handshake with Authorization Token & Active Tenant Scope
- * - Monotonic Sequence Number Tracking (`seq`)
- * - Sequence Gap Detection with Automatic `/api/v1/realtime/resync` replay
- * - Tenant Scope Disconnect / Reconnect on Tenant Switching
- * - Heartbeat Ping / Pong keep-alives (15s)
- * - Exponential backoff reconnection
- * - Honest operational states: CONNECTING, CONNECTED, RECONNECTING, DEGRADED, DISCONNECTED
- * - Never shows stale data as LIVE
- */
-
 import { apiClient } from './api-client';
+import type {
+  RealtimeConnectionState,
+  RealtimeEvent,
+  RealtimeEventPayloads,
+  RealtimeEventType,
+  RealtimeFrame,
+  RealtimeResyncResponse,
+} from './realtime-events';
 
-export type RealtimeConnectionState = 'CONNECTING' | 'CONNECTED' | 'RECONNECTING' | 'DEGRADED' | 'DISCONNECTED';
+export type {
+  RealtimeConnectionState,
+  RealtimeEvent,
+  RealtimeEventPayloads,
+  RealtimeEventType,
+  RealtimeMessage,
+} from './realtime-events';
 
-export interface RealtimeMessage<T = any> {
-  seq: number;
-  tenantId: string;
-  timestamp: string;
-  type: string;
-  payload: T;
+type MessageHandler = (message: RealtimeEvent) => void;
+type StateHandler = (state: RealtimeConnectionState) => void;
+type TimerHandle = ReturnType<typeof setTimeout>;
+
+const HEARTBEAT_INTERVAL_MS = 15_000;
+const RECONNECT_BASE_DELAY_MS = 1_000;
+const RECONNECT_BACKOFF_FACTOR = 1.5;
+const RECONNECT_JITTER_MS = 500;
+const MAX_RECONNECT_DELAY_MS = 15_000;
+const NORMAL_CLOSE_CODE = 1000;
+const AUTH_FAILURE_CLOSE_CODES = new Set([4401, 4001]);
+const PROTOCOL_VERSION = 'zf-v1';
+
+export function computeReconnectDelay(attempt: number): number {
+  const exponentialDelay = RECONNECT_BASE_DELAY_MS * RECONNECT_BACKOFF_FACTOR ** attempt;
+  return Math.min(exponentialDelay + Math.random() * RECONNECT_JITTER_MS, MAX_RECONNECT_DELAY_MS);
 }
 
-type MessageHandler = (message: RealtimeMessage) => void;
-type StateHandler = (state: RealtimeConnectionState) => void;
+function buildSocketUrl(tenantId: string): string {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  // The token travels in the subprotocol header, never the query string, so it stays out of access logs.
+  return `${protocol}//${window.location.host}/ws/events?tenantId=${encodeURIComponent(tenantId)}`;
+}
 
 class RealtimeClient {
   private ws: WebSocket | null = null;
   private state: RealtimeConnectionState = 'DISCONNECTED';
-  private currentTenantId: string = 'tenant-enterprise-hq';
-  private lastSeq: number = 0;
-  private messageHandlers: Set<MessageHandler> = new Set();
-  private stateHandlers: Set<StateHandler> = new Set();
-  private pingIntervalId: any = null;
-  private reconnectTimeoutId: any = null;
-  private reconnectAttempts: number = 0;
-  private isExplicitlyClosed: boolean = false;
-
-  constructor() {
-    this.currentTenantId = apiClient.getTenantId();
-  }
+  private currentTenantId: string = apiClient.getTenantId();
+  private lastSeq = 0;
+  private readonly messageHandlers = new Set<MessageHandler>();
+  private readonly stateHandlers = new Set<StateHandler>();
+  private heartbeatTimer: TimerHandle | null = null;
+  private reconnectTimer: TimerHandle | null = null;
+  private reconnectAttempts = 0;
+  private isExplicitlyClosed = false;
 
   public getState(): RealtimeConnectionState {
     return this.state;
@@ -59,13 +67,15 @@ class RealtimeClient {
     };
   }
 
-  public subscribe<T = any>(eventType: string, handler: (payload: T) => void) {
-    const msgHandler: MessageHandler = (msg) => {
-      if (msg.type === eventType) {
-        handler(msg.payload);
+  public subscribe<TType extends RealtimeEventType>(
+    eventType: TType,
+    handler: (payload: RealtimeEventPayloads[TType]) => void,
+  ) {
+    return this.onMessage((message) => {
+      if (message.type === eventType) {
+        handler(message.payload as RealtimeEventPayloads[TType]);
       }
-    };
-    return this.onMessage(msgHandler);
+    });
   }
 
   public onStateChange(handler: StateHandler) {
@@ -74,13 +84,6 @@ class RealtimeClient {
     return () => {
       this.stateHandlers.delete(handler);
     };
-  }
-
-  private setState(newState: RealtimeConnectionState) {
-    if (this.state !== newState) {
-      this.state = newState;
-      this.stateHandlers.forEach((h) => h(newState));
-    }
   }
 
   public connect(tenantId?: string) {
@@ -101,94 +104,13 @@ class RealtimeClient {
 
     this.setState(this.reconnectAttempts > 0 ? 'RECONNECTING' : 'CONNECTING');
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    // Token is NOT transmitted via query string to prevent access log / history exposure
-    const wsUrl = `${protocol}//${host}/ws/events?tenantId=${encodeURIComponent(this.currentTenantId)}`;
-
     try {
-      this.ws = new WebSocket(wsUrl, ['zf-v1', `zf-auth.${token}`]);
-
-      this.ws.onopen = () => {
-        // Send first-message AUTH handshake frame as redundant defense-in-depth
-        try {
-          this.ws?.send(
-            JSON.stringify({
-              type: 'AUTH',
-              token,
-              tenantId: this.currentTenantId,
-            })
-          );
-        } catch {}
-
-        this.setState('CONNECTED');
-        this.reconnectAttempts = 0;
-        this.startHeartbeat();
-
-        // Resync after reconnect if we had previous sequence numbers
-        if (this.lastSeq > 0) {
-          this.triggerResync();
-        }
-      };
-
-      this.ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-
-          if (data.type === 'PONG') {
-            return;
-          }
-
-          if (data.type === 'CONNECTED') {
-            if (data.seq) {
-              this.lastSeq = data.seq;
-            }
-            return;
-          }
-
-          if (data.type === 'SESSION_REVOKED') {
-            this.disconnect();
-            apiClient.setToken(null);
-            return;
-          }
-
-          // Sequence gap check
-          if (typeof data.seq === 'number') {
-            if (this.lastSeq > 0 && data.seq > this.lastSeq + 1) {
-              console.warn(`[ZeroFrame Realtime] Sequence gap detected (expected ${this.lastSeq + 1}, got ${data.seq}). Triggering resync.`);
-              this.triggerResync();
-            }
-            this.lastSeq = data.seq;
-          }
-
-          // Broadcast to registered handlers
-          this.messageHandlers.forEach((h) => h(data));
-        } catch (err) {
-          console.error('[ZeroFrame Realtime] Failed parsing message', err);
-        }
-      };
-
-      this.ws.onclose = (event) => {
-        this.stopHeartbeat();
-        if (this.isExplicitlyClosed) {
-          this.setState('DISCONNECTED');
-          return;
-        }
-
-        // If closed due to auth failure (4401 or 4001)
-        if (event.code === 4401 || event.code === 4001) {
-          this.setState('DISCONNECTED');
-          apiClient.setToken(null);
-          return;
-        }
-
-        this.scheduleReconnect();
-      };
-
-      this.ws.onerror = () => {
-        this.setState('DEGRADED');
-      };
-    } catch (err) {
+      this.ws = new WebSocket(buildSocketUrl(this.currentTenantId), [PROTOCOL_VERSION, `zf-auth.${token}`]);
+      this.ws.onopen = () => this.handleOpen(token);
+      this.ws.onmessage = (event) => this.handleMessage(event);
+      this.ws.onclose = (event) => this.handleClose(event);
+      this.ws.onerror = () => this.setState('DEGRADED');
+    } catch {
       this.setState('DISCONNECTED');
       this.scheduleReconnect();
     }
@@ -197,34 +119,117 @@ class RealtimeClient {
   public disconnect() {
     this.isExplicitlyClosed = true;
     this.stopHeartbeat();
-    if (this.reconnectTimeoutId) {
-      clearTimeout(this.reconnectTimeoutId);
-      this.reconnectTimeoutId = null;
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
     }
     if (this.ws) {
       try {
-        this.ws.close(1000, 'Client initiated disconnect');
+        this.ws.close(NORMAL_CLOSE_CODE, 'Client initiated disconnect');
       } catch {
-        // ignore
+        // Socket already closed.
       }
       this.ws = null;
     }
     this.setState('DISCONNECTED');
   }
 
+  private setState(nextState: RealtimeConnectionState) {
+    if (this.state !== nextState) {
+      this.state = nextState;
+      for (const handler of this.stateHandlers) handler(nextState);
+    }
+  }
+
+  private handleOpen(token: string) {
+    // Redundant first-frame AUTH handshake as defense in depth alongside the subprotocol token.
+    try {
+      this.ws?.send(JSON.stringify({ type: 'AUTH', token, tenantId: this.currentTenantId }));
+    } catch {
+      // The server authenticates from the subprotocol even if this frame fails.
+    }
+
+    this.setState('CONNECTED');
+    this.reconnectAttempts = 0;
+    this.startHeartbeat();
+
+    if (this.lastSeq > 0) {
+      this.triggerResync();
+    }
+  }
+
+  private handleMessage(event: MessageEvent) {
+    try {
+      const frame = JSON.parse(event.data) as RealtimeFrame;
+
+      if (frame.type === 'PONG') {
+        return;
+      }
+
+      if (frame.type === 'CONNECTED') {
+        if (frame.seq) {
+          this.lastSeq = frame.seq;
+        }
+        return;
+      }
+
+      if (frame.type === 'SESSION_REVOKED') {
+        this.disconnect();
+        apiClient.setToken(null);
+        return;
+      }
+
+      this.trackSequence(frame.seq);
+      this.dispatch(frame);
+    } catch (err) {
+      console.error('[ZeroFrame Realtime] Failed parsing message', err);
+    }
+  }
+
+  private handleClose(event: CloseEvent) {
+    this.stopHeartbeat();
+    if (this.isExplicitlyClosed) {
+      this.setState('DISCONNECTED');
+      return;
+    }
+
+    if (AUTH_FAILURE_CLOSE_CODES.has(event.code)) {
+      this.setState('DISCONNECTED');
+      apiClient.setToken(null);
+      return;
+    }
+
+    this.scheduleReconnect();
+  }
+
+  private trackSequence(seq: unknown) {
+    if (typeof seq !== 'number') return;
+    if (this.lastSeq > 0 && seq > this.lastSeq + 1) {
+      console.warn(
+        `[ZeroFrame Realtime] Sequence gap detected (expected ${this.lastSeq + 1}, got ${seq}). Triggering resync.`,
+      );
+      this.triggerResync();
+    }
+    this.lastSeq = seq;
+  }
+
+  private dispatch(message: RealtimeEvent) {
+    for (const handler of this.messageHandlers) handler(message);
+  }
+
   private startHeartbeat() {
     this.stopHeartbeat();
-    this.pingIntervalId = setInterval(() => {
+    this.heartbeatTimer = setInterval(() => {
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         this.ws.send(JSON.stringify({ type: 'PING', timestamp: new Date().toISOString() }));
       }
-    }, 15000);
+    }, HEARTBEAT_INTERVAL_MS);
   }
 
   private stopHeartbeat() {
-    if (this.pingIntervalId) {
-      clearInterval(this.pingIntervalId);
-      this.pingIntervalId = null;
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
     }
   }
 
@@ -232,22 +237,19 @@ class RealtimeClient {
     if (this.isExplicitlyClosed) return;
     this.setState('RECONNECTING');
 
-    const delay = Math.min(1000 * Math.pow(1.5, this.reconnectAttempts) + Math.random() * 500, 15000);
+    const delay = computeReconnectDelay(this.reconnectAttempts);
     this.reconnectAttempts++;
-
-    this.reconnectTimeoutId = setTimeout(() => {
-      this.connect();
-    }, delay);
+    this.reconnectTimer = setTimeout(() => this.connect(), delay);
   }
 
   private async triggerResync() {
     try {
-      const res = await apiClient.get<any>(`/realtime/resync?tenantId=${this.currentTenantId}&lastSeq=${this.lastSeq}`);
-      if (res.data?.missedEvents && res.data.missedEvents.length > 0) {
-        for (const evt of res.data.missedEvents) {
-          this.lastSeq = Math.max(this.lastSeq, evt.seq);
-          this.messageHandlers.forEach((h) => h(evt));
-        }
+      const res = await apiClient.get<RealtimeResyncResponse>(
+        `/realtime/resync?tenantId=${this.currentTenantId}&lastSeq=${this.lastSeq}`,
+      );
+      for (const missedEvent of res.data?.missedEvents ?? []) {
+        this.lastSeq = Math.max(this.lastSeq, missedEvent.seq);
+        this.dispatch(missedEvent);
       }
     } catch (err) {
       console.warn('[ZeroFrame Realtime] Resync fetch deferred', err);

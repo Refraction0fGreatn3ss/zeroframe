@@ -1,0 +1,38 @@
+import { secondsAgo } from '../lib/relative-time';
+import type { SensorNode } from '../types/fleet';
+
+export const DEFAULT_SENSORS: SensorNode[] = [
+  {
+    id: 'sensor-core-01',
+    name: 'SENSOR-CORE-01',
+    hostname: 'zeroframe-appliance-core-01.corp',
+    site: 'Primary Data Center (Frankfurt)',
+    managementIp: '10.140.0.11',
+    architecture: 'x86_64',
+    version: '3.2.0-core',
+    kernelVersion: 'Linux 6.5.0-44-generic',
+    captureDriver: 'AF_XDP',
+    queueCount: 16,
+    activeQueue: 0,
+    lifecycle: 'ACTIVE',
+    connectivity: 'CONNECTED',
+    health: 'DEGRADED',
+    observation: 'OBSERVING_FULL',
+    trust: 'TRUSTED_MTLS',
+    spiffeId: 'spiffe://zeroframe.internal/sensor/core-01',
+    certFingerprintSha256: 'e8f01a39b22a44cc...9911',
+    certExpiresAt: '2027-04-15T00:00:00Z',
+    caIssuer: 'ZeroFrame Internal CA (Offline Root)',
+    interfaceName: 'enp4s0f0',
+    promiscuousEnabled: true,
+    wireThroughputMbps: 2450.0,
+    packetRatePps: 342000,
+    kernelDropsPps: 18,
+    outboxPendingEvents: 340,
+    lastHeartbeat: secondsAgo(2),
+    lastConfigSync: '2026-10-12T08:00:00Z',
+    configVersion: 'v3.2.1-prod',
+    rollbackReady: true,
+    tenantId: 'tenant-enterprise-hq',
+  },
+];

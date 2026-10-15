@@ -1,11 +1,3 @@
-/**
- * ZeroFlash Enterprise 1.0 - Core Security & NDR Types
- * Strictly separates:
- * 1. WHAT EXISTS (Topology / Entities)
- * 2. WHAT CAN ZEROFLASH SEE (Observation / Fidelity / Inspection Integrity)
- * 3. WHAT CAN ZEROFLASH DETECT (Live Detection Assurance / Capability Matrix)
- */
-
 export type SecurityState =
   | 'HEALTHY'
   | 'DEGRADED'
@@ -21,27 +13,11 @@ export type SecurityState =
 
 export type Severity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFORMATIONAL';
 
-export type SourceFidelity =
-  | 'FLOW'
-  | 'WIRE_METADATA'
-  | 'DEEP_PACKET'
-  | 'ENDPOINT_CORROBORATED';
+export type SourceFidelity = 'FLOW' | 'WIRE_METADATA' | 'DEEP_PACKET' | 'ENDPOINT_CORROBORATED';
 
-export type InspectionStage =
-  | 'CAPTURE'
-  | 'L2'
-  | 'L3'
-  | 'TRANSPORT'
-  | 'SESSION'
-  | 'CRYPTO'
-  | 'APPLICATION';
+export type InspectionStage = 'CAPTURE' | 'L2' | 'L3' | 'TRANSPORT' | 'SESSION' | 'CRYPTO' | 'APPLICATION';
 
-export type OperatingMode =
-  | 'ACTIVE_PROTECTION'
-  | 'MONITOR_ONLY'
-  | 'MAINTENANCE'
-  | 'MAINTENANCE_MODE'
-  | 'STOPPED';
+export type OperatingMode = 'ACTIVE_PROTECTION' | 'MONITOR_ONLY' | 'MAINTENANCE' | 'MAINTENANCE_MODE' | 'STOPPED';
 
 export type ResponseAuthority = 'OBSERVE' | 'GOVERN' | 'AUTOMATE_NARROW';
 
@@ -68,11 +44,7 @@ export type EvidenceState =
   | 'RESTRICTED'
   | 'UNKNOWN';
 
-export type RelationshipProvenance =
-  | 'DISCOVERED'
-  | 'DECLARED'
-  | 'IMPORTED'
-  | 'INFERRED';
+export type RelationshipProvenance = 'DISCOVERED' | 'DECLARED' | 'IMPORTED' | 'INFERRED';
 
 export interface MitreTactic {
   id: string;
@@ -97,7 +69,7 @@ export interface MitreTactic {
 export interface SecurityIncident {
   id: string;
   title: string;
-  plainEnglishSummary: string; // Used for Simple SOC mode
+  plainEnglishSummary: string;
   severity: Severity;
   state: 'OPEN' | 'INVESTIGATING' | 'CONTAINED' | 'RESOLVED' | 'SUPPRESSED';
   firstSeen: string;

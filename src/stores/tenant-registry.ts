@@ -1,14 +1,9 @@
-/**
- * ZeroFrame Multi-Store Tenant Isolation Registry
- * Coordinates synchronous clearing and reloading of tenant state across all modules.
- */
-
 type ClearHandler = () => void;
 type ReloadHandler = (tenantId: string) => Promise<void>;
 
 class TenantRegistry {
-  private clearHandlers: Set<ClearHandler> = new Set();
-  private reloadHandlers: Set<ReloadHandler> = new Set();
+  private readonly clearHandlers = new Set<ClearHandler>();
+  private readonly reloadHandlers = new Set<ReloadHandler>();
 
   public register(clear: ClearHandler, reload: ReloadHandler) {
     this.clearHandlers.add(clear);
@@ -30,15 +25,15 @@ class TenantRegistry {
   }
 
   public async reloadAll(tenantId: string) {
-    const promises: Promise<void>[] = [];
+    const reloads: Promise<void>[] = [];
     this.reloadHandlers.forEach((handler) => {
       try {
-        promises.push(handler(tenantId));
+        reloads.push(handler(tenantId));
       } catch (err) {
         console.error('Error initiating tenant store reload', err);
       }
     });
-    await Promise.allSettled(promises);
+    await Promise.allSettled(reloads);
   }
 }
 

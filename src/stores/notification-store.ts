@@ -1,164 +1,105 @@
-/**
- * Global Notification Store
- * Supports 15 categories, deduplication, unread counts, acknowledgment, and tenant isolation.
- * Connected to Authoritative Backend and Realtime Ingestion.
- */
-
-import { useState, useEffect } from 'react';
-import { ZeroFlashNotification, NotificationCategory } from '../types/notifications';
+import { createStore, useStore } from '../lib/create-store';
 import { notificationService } from '../services/notification-service';
 import { realtimeClient } from '../services/realtime-client';
+import type { ZeroFlashNotification } from '../types/notifications';
+import {
+  countUnacknowledgedCritical,
+  countUnread,
+  filterByCategory,
+  type NotificationCategoryFilter,
+} from './notification-store/notification-selectors';
+import { buildNotificationFromEvent } from './notification-store/realtime-notifications';
 import { tenantRegistry } from './tenant-registry';
 
 interface NotificationStoreState {
   notifications: ZeroFlashNotification[];
-  selectedCategory: NotificationCategory | 'ALL';
+  selectedCategory: NotificationCategoryFilter;
   isLoading: boolean;
 }
 
-let notifState: NotificationStoreState = {
+const notificationStore = createStore<NotificationStoreState>({
   notifications: [],
   selectedCategory: 'ALL',
   isLoading: false,
-};
+});
 
-const listeners = new Set<(state: NotificationStoreState) => void>();
-
-function notify() {
-  listeners.forEach((l) => l({ ...notifState }));
+function updateNotifications(transform: (notifications: ZeroFlashNotification[]) => ZeroFlashNotification[]) {
+  notificationStore.setState((state) => ({ notifications: transform(state.notifications) }));
 }
 
 async function loadNotifications() {
-  notifState.isLoading = true;
-  notify();
+  notificationStore.setState({ isLoading: true });
   try {
-    const list = await notificationService.getNotifications();
-    notifState.notifications = list;
+    const notifications = await notificationService.getNotifications();
+    notificationStore.setState({ notifications });
   } catch (err) {
     console.warn('[Notification Store] Error loading notifications', err);
   } finally {
-    notifState.isLoading = false;
-    notify();
+    notificationStore.setState({ isLoading: false });
   }
 }
 
-// Initial load
 loadNotifications();
 
-// Register with tenant isolation registry
 tenantRegistry.register(
-  () => {
-    notifState.notifications = [];
-    notify();
-  },
-  async () => {
-    await loadNotifications();
-  }
+  () => notificationStore.setState({ notifications: [] }),
+  () => loadNotifications(),
 );
 
-// Realtime notification ingestion
-realtimeClient.onMessage((msg) => {
-  if (msg.type === 'PERMIT_ISSUED') {
-    const newNotif: ZeroFlashNotification = {
-      id: `notif-${Date.now()}`,
-      category: 'RESPONSE',
-      severity: 'HIGH',
-      title: 'New Governed Response Permit Issued',
-      message: `Permit ${msg.payload.id} for ${msg.payload.targetResource} requires dual-control approval.`,
-      timestamp: new Date().toISOString(),
-      read: false,
-      acknowledged: false,
-      deepLink: '/respond/permits',
-      fingerprintHash: `hash-${msg.payload.id}`,
-      tenantId: msg.payload.tenantId,
-    };
-    notifState.notifications.unshift(newNotif);
-    notify();
-  } else if (msg.type === 'KILL_SWITCH_CHANGED') {
-    const newNotif: ZeroFlashNotification = {
-      id: `notif-${Date.now()}`,
-      category: 'RESPONSE',
-      severity: 'CRITICAL',
-      title: 'Response Kill Switch Engaged',
-      message: `Autonomous response engine blocked by operator ${msg.payload.operator}.`,
-      timestamp: new Date().toISOString(),
-      read: false,
-      acknowledged: false,
-      deepLink: '/respond/studio',
-      fingerprintHash: `hash-kill-switch-${Date.now()}`,
-      tenantId: msg.payload.tenantId,
-    };
-    notifState.notifications.unshift(newNotif);
-    notify();
+realtimeClient.onMessage((event) => {
+  const notification = buildNotificationFromEvent(event);
+  if (notification) {
+    updateNotifications((notifications) => [notification, ...notifications]);
   }
 });
 
-export function useNotificationStore() {
-  const [state, setState] = useState<NotificationStoreState>(notifState);
-
-  useEffect(() => {
-    listeners.add(setState);
-    return () => {
-      listeners.delete(setState);
-    };
-  }, []);
-
-  const markAsRead = (id: string) => {
-    notifState.notifications = notifState.notifications.map((n) =>
-      n.id === id ? { ...n, read: true } : n
+export const notificationActions = {
+  markAsRead(id: string) {
+    updateNotifications((notifications) =>
+      notifications.map((notification) => (notification.id === id ? { ...notification, read: true } : notification)),
     );
-    notify();
-  };
+  },
 
-  const markAllAsRead = () => {
-    notifState.notifications = notifState.notifications.map((n) => ({ ...n, read: true }));
-    notify();
-  };
+  markAllAsRead() {
+    updateNotifications((notifications) => notifications.map((notification) => ({ ...notification, read: true })));
+  },
 
-  const acknowledge = async (id: string) => {
-    notifState.notifications = notifState.notifications.map((n) =>
-      n.id === id ? { ...n, acknowledged: true, read: true } : n
+  async acknowledge(id: string) {
+    updateNotifications((notifications) =>
+      notifications.map((notification) =>
+        notification.id === id ? { ...notification, acknowledged: true, read: true } : notification,
+      ),
     );
-    notify();
     try {
       await notificationService.acknowledgeNotification(id);
     } catch {
-      // ignore
+      // Optimistic update stays; the server reconciles on the next load.
     }
-  };
+  },
 
-  const clearAll = async () => {
-    notifState.notifications = [];
-    notify();
+  async clearAll() {
+    notificationStore.setState({ notifications: [] });
     try {
       await notificationService.clearAllNotifications();
     } catch {
-      // ignore
+      // Optimistic update stays; the server reconciles on the next load.
     }
-  };
+  },
 
-  const setCategoryFilter = (cat: NotificationCategory | 'ALL') => {
-    notifState.selectedCategory = cat;
-    notify();
-  };
+  setCategoryFilter(selectedCategory: NotificationCategoryFilter) {
+    notificationStore.setState({ selectedCategory });
+  },
 
-  const unreadCount = notifState.notifications.filter((n) => !n.read).length;
-  const criticalCount = notifState.notifications.filter((n) => n.severity === 'CRITICAL' && !n.acknowledged).length;
+  refreshNotifications: loadNotifications,
+};
 
-  const filteredNotifications = notifState.selectedCategory === 'ALL'
-    ? notifState.notifications
-    : notifState.notifications.filter((n) => n.category === notifState.selectedCategory);
-
+export function useNotificationStore() {
+  const state = useStore(notificationStore);
   return {
     ...state,
-    filteredNotifications,
-    unreadCount,
-    criticalCount,
-    markAsRead,
-    markAllAsRead,
-    acknowledge,
-    clearAll,
-    setCategoryFilter,
-    refreshNotifications: loadNotifications,
+    filteredNotifications: filterByCategory(state.notifications, state.selectedCategory),
+    unreadCount: countUnread(state.notifications),
+    criticalCount: countUnacknowledgedCritical(state.notifications),
+    ...notificationActions,
   };
 }

@@ -1,11 +1,6 @@
-/**
- * Capability Negotiation Store
- * Connects frontend to the authoritative backend capability manifest.
- * States: UNKNOWN | LOADING | FRESH | STALE | UNAVAILABLE | FAILED
- */
-
-import { useState, useEffect } from 'react';
-import { capabilityService, CapabilityManifest, BackendCapability, CapabilityStatus } from '../services/capability-service';
+import { createStore, useStore } from '../lib/create-store';
+import type { BackendCapability, CapabilityStatus } from '../services/capability-service';
+import { capabilityService } from '../services/capability-service';
 import { tenantRegistry } from './tenant-registry';
 
 interface CapabilityStoreState {
@@ -16,65 +11,42 @@ interface CapabilityStoreState {
   isLoading: boolean;
 }
 
-let capabilityState: CapabilityStoreState = {
+const capabilityStore = createStore<CapabilityStoreState>({
   status: 'LOADING',
   manifestVersion: 'UNKNOWN',
   generatedAt: new Date().toISOString(),
   capabilities: [],
   isLoading: false,
-};
-
-const listeners = new Set<(state: CapabilityStoreState) => void>();
-
-function notify() {
-  listeners.forEach((l) => l({ ...capabilityState }));
-}
+});
 
 async function loadCapabilities() {
-  capabilityState.isLoading = true;
-  notify();
+  capabilityStore.setState({ isLoading: true });
   try {
     const manifest = await capabilityService.getCapabilities();
-    capabilityState.status = manifest.status;
-    capabilityState.manifestVersion = manifest.manifestVersion;
-    capabilityState.generatedAt = manifest.generatedAt;
-    capabilityState.capabilities = manifest.capabilities;
+    capabilityStore.setState({
+      status: manifest.status,
+      manifestVersion: manifest.manifestVersion,
+      generatedAt: manifest.generatedAt,
+      capabilities: manifest.capabilities,
+    });
   } catch {
-    capabilityState.status = 'FAILED';
+    capabilityStore.setState({ status: 'FAILED' });
   } finally {
-    capabilityState.isLoading = false;
-    notify();
+    capabilityStore.setState({ isLoading: false });
   }
 }
 
-// Initial load
 loadCapabilities();
 
-// Register with tenant isolation registry
 tenantRegistry.register(
-  () => {
-    capabilityState.status = 'STALE';
-    notify();
-  },
-  async () => {
-    await loadCapabilities();
-  }
+  () => capabilityStore.setState({ status: 'STALE' }),
+  () => loadCapabilities(),
 );
 
+export const capabilityActions = {
+  refreshCapabilities: () => loadCapabilities(),
+};
+
 export function useCapabilityStore() {
-  const [state, setState] = useState<CapabilityStoreState>(capabilityState);
-
-  useEffect(() => {
-    listeners.add(setState);
-    return () => {
-      listeners.delete(setState);
-    };
-  }, []);
-
-  const refreshCapabilities = () => loadCapabilities();
-
-  return {
-    ...state,
-    refreshCapabilities,
-  };
+  return { ...useStore(capabilityStore), ...capabilityActions };
 }

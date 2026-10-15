@@ -1,0 +1,161 @@
+import type { GraphLayer, TopologyEdge, TopologyNode } from './entity-graph.types';
+
+export const EXTERNAL_C2_NODE_ID = 'c2-ext';
+export const DEFAULT_SELECTED_NODE_ID = 'srv-app-01';
+export const FALLBACK_SELECTED_NODE_INDEX = 2;
+
+export const GRAPH_LAYER_OPTIONS: { value: GraphLayer; label: string }[] = [
+  { value: 'ALL', label: 'Full Blast Radius' },
+  { value: 'NETWORK', label: 'Network Flows' },
+  { value: 'IDENTITY', label: 'Identity Chain' },
+];
+
+const EXTERNAL_C2_BASE: Omit<TopologyNode, 'sublabel'> = {
+  id: EXTERNAL_C2_NODE_ID,
+  label: '185.220.101.44',
+  type: 'EXTERNAL_C2',
+  ip: '185.220.101.44',
+  zone: 'External WAN',
+  x: 80,
+  y: 200,
+  compromised: true,
+  blastRadiusScore: 94,
+  openPorts: [443, 8080],
+  activeConnections: 3,
+};
+
+export const createExternalC2Node = (sublabel: string): TopologyNode => ({
+  ...EXTERNAL_C2_BASE,
+  sublabel,
+  openPorts: [...EXTERNAL_C2_BASE.openPorts],
+});
+
+export const DEMO_TOPOLOGY_NODES: TopologyNode[] = [
+  createExternalC2Node('Cobalt Strike C2 (NL)'),
+  {
+    id: 'gw-border',
+    label: 'Edge Gateway 01',
+    sublabel: '10.140.0.1 (DMZ)',
+    type: 'PIVOT_HOST',
+    ip: '10.140.0.1',
+    zone: 'Perimeter DMZ',
+    x: 260,
+    y: 200,
+    compromised: false,
+    blastRadiusScore: 40,
+    openPorts: [443, 80, 22],
+    activeConnections: 142,
+  },
+  {
+    id: 'srv-app-01',
+    label: 'srv-app-prod-01',
+    sublabel: '10.140.2.88 (Web Tier)',
+    type: 'COMPROMISED_HOST',
+    ip: '10.140.2.88',
+    zone: 'Production App',
+    x: 480,
+    y: 120,
+    compromised: true,
+    blastRadiusScore: 88,
+    openPorts: [80, 443, 3389],
+    activeConnections: 18,
+  },
+  {
+    id: 'user-admin',
+    label: 'svc_backup_admin',
+    sublabel: 'Hijacked Domain Account',
+    type: 'IDENTITY',
+    zone: 'Active Directory',
+    x: 480,
+    y: 300,
+    compromised: true,
+    blastRadiusScore: 92,
+    openPorts: [],
+    activeConnections: 4,
+  },
+  {
+    id: 'dc-01',
+    label: 'DC-01 (Domain Controller)',
+    sublabel: '10.140.10.5 (Kerberos/LDAP)',
+    type: 'CROWN_JEWEL',
+    ip: '10.140.10.5',
+    zone: 'Identity Core',
+    x: 720,
+    y: 140,
+    compromised: true,
+    blastRadiusScore: 98,
+    openPorts: [88, 389, 445, 135],
+    activeConnections: 89,
+  },
+  {
+    id: 'db-crown',
+    label: 'DB-CLUSTER-PRIMARY',
+    sublabel: '10.140.4.12 (Customer PII)',
+    type: 'CROWN_JEWEL',
+    ip: '10.140.4.12',
+    zone: 'Restricted Data Tier',
+    x: 720,
+    y: 280,
+    compromised: false,
+    blastRadiusScore: 99,
+    openPorts: [1433, 5432],
+    activeConnections: 12,
+  },
+];
+
+export const DEMO_TOPOLOGY_EDGES: TopologyEdge[] = [
+  {
+    id: 'e1',
+    source: 'c2-ext',
+    target: 'gw-border',
+    protocol: 'TLS 1.3 / HTTPS',
+    port: 443,
+    volume: '48.2 KB',
+    severity: 'CRITICAL',
+  },
+  {
+    id: 'e2',
+    source: 'gw-border',
+    target: 'srv-app-01',
+    protocol: 'HTTP/2 Reverse Proxy',
+    port: 80,
+    volume: '48.2 KB',
+    severity: 'CRITICAL',
+  },
+  {
+    id: 'e3',
+    source: 'srv-app-01',
+    target: 'user-admin',
+    protocol: 'LSASS Memory Dump',
+    port: 0,
+    volume: 'Token Stolen',
+    severity: 'CRITICAL',
+  },
+  {
+    id: 'e4',
+    source: 'srv-app-01',
+    target: 'dc-01',
+    protocol: 'SMB / RPC PsExec',
+    port: 445,
+    volume: '84.2 KB',
+    severity: 'CRITICAL',
+  },
+  {
+    id: 'e5',
+    source: 'user-admin',
+    target: 'dc-01',
+    protocol: 'Kerberos TGS-REQ',
+    port: 88,
+    volume: '3.1 KB',
+    severity: 'SUSPICIOUS',
+  },
+  {
+    id: 'e6',
+    source: 'srv-app-01',
+    target: 'db-crown',
+    protocol: 'TDS SQL Connection',
+    port: 1433,
+    volume: '12.4 KB (Blocked)',
+    severity: 'NOMINAL',
+  },
+];

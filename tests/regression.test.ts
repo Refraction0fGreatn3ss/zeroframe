@@ -1,6 +1,6 @@
 /**
  * ZeroFlash Enterprise 1.0 — Blind Full Bug Eradication Regression Test Suite
- * 
+ *
  * Verifies 9 release-blocking audit criteria:
  * 1. react-is and dependency resolution
  * 2. Realtime disconnect stale-state propagation
@@ -13,13 +13,12 @@
  * 9. Route availability and smoke assertions
  */
 
-import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { sanitizeExportData, calculateExportRisk, generateProofOfOrigin } from '../src/lib/exportSafety';
+import { describe, test } from 'node:test';
 import { NAVIGATION_STRUCTURE } from '../src/config/routes';
+import { calculateExportRisk, generateProofOfOrigin, sanitizeExportData } from '../src/lib/export-safety';
 
 describe('Regression Test Suite: ZeroFlash Enterprise 1.0', () => {
-
   // Test 1: Dependency resolution for react-is
   test('1. Dependency Verification: react-is is resolvable', async () => {
     const reactIs = await import('react-is');
@@ -66,11 +65,15 @@ describe('Regression Test Suite: ZeroFlash Enterprise 1.0', () => {
 
   // Test 4: Route Structure & Coverage Smoke Test
   test('4. Route Architecture: All 5 navigation zones and core routes defined', () => {
-    assert.strictEqual(NAVIGATION_STRUCTURE.length, 5, 'Must contain Overview, Investigate, Respond, Evidence, and System');
-    
+    assert.strictEqual(
+      NAVIGATION_STRUCTURE.length,
+      5,
+      'Must contain Overview, Investigate, Respond, Evidence, and System',
+    );
+
     const allPaths: string[] = [];
     NAVIGATION_STRUCTURE.forEach((sec) => {
-      sec.items.forEach((item) => allPaths.push(item.path));
+      for (const item of sec.items) allPaths.push(item.path);
     });
 
     // Check release-critical routes
@@ -90,7 +93,7 @@ describe('Regression Test Suite: ZeroFlash Enterprise 1.0', () => {
   // Test 5: False-Green Prevention Model
   test('5. False-Green Prevention: Empty data is not masked as healthy default', () => {
     // When tenant has 0 incidents, state should be empty, not fall back to another tenant's mock
-    const emptyTenantData: any[] = [];
+    const emptyTenantData: unknown[] = [];
     const resultingIncidents = emptyTenantData.length > 0 ? emptyTenantData : [];
     assert.strictEqual(resultingIncidents.length, 0, 'Empty tenant data must yield 0 incidents');
   });
@@ -157,5 +160,4 @@ describe('Regression Test Suite: ZeroFlash Enterprise 1.0', () => {
     assert.strictEqual(determineFreshness(true), 'FRESH', 'Connected realtime must be FRESH');
     assert.strictEqual(determineFreshness(false), 'STALE', 'Disconnected realtime must be STALE');
   });
-
 });

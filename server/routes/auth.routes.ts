@@ -1,6 +1,6 @@
-import { Router, type Request } from 'express';
+import { type Request, Router } from 'express';
 import { authenticate, currentSession } from '../middleware/authenticate.ts';
-import { login, verifyStepUp, verifyUnlockPin, type ClientInfo } from '../services/login-service.ts';
+import { type ClientInfo, login, verifyStepUp, verifyUnlockPin } from '../services/login-service.ts';
 import {
   applyInactivityPolicy,
   inactivityTimeoutOf,

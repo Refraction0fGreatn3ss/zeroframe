@@ -25,7 +25,8 @@ export function csrfGuardMiddleware(req: Request, res: Response, next: NextFunct
     threatLedger.countDeflection();
     return res.status(403).json({
       error: 'CSRF_ORIGIN_VERIFICATION_FAILED',
-      message: 'State-mutating request rejected: Missing authoritative custom headers required for CSRF protection (CWE-352).',
+      message:
+        'State-mutating request rejected: Missing authoritative custom headers required for CSRF protection (CWE-352).',
     });
   }
 

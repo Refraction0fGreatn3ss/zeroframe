@@ -1,8 +1,3 @@
-/**
- * Security Activity Log Types
- * High-density real-time audit and security event models
- */
-
 export type ActivityCategory = 'SYSTEM_EVENT' | 'USER_LOGIN' | 'THREAT_ALERT';
 
 export type ActivitySeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'INFO';
@@ -11,7 +6,7 @@ export type ActivityStatus = 'SUCCESS' | 'BLOCKED' | 'FLAGGED' | 'INVESTIGATING'
 
 export interface SecurityActivityItem {
   id: string;
-  timestamp: string; // ISO 8601
+  timestamp: string;
   category: ActivityCategory;
   severity: ActivitySeverity;
   title: string;
@@ -23,7 +18,7 @@ export interface SecurityActivityItem {
   location?: string;
   mitreTactic?: string;
   status: ActivityStatus;
-  payload?: Record<string, any>;
+  payload?: Record<string, unknown>;
   isNew?: boolean;
 }
 

@@ -19,7 +19,9 @@ export function createSystemRouter(): Router {
 
   router.get('/system/inspection', (req, res) => res.json(currentTenant(req).db.inspectionPipeline));
 
-  router.get('/system/assurance', (req, res) => res.json({ capabilities: currentTenant(req).db.detectionCapabilities }));
+  router.get('/system/assurance', (req, res) =>
+    res.json({ capabilities: currentTenant(req).db.detectionCapabilities }),
+  );
 
   router.post('/system/assurance/trigger-canary', (req, res) => {
     const auditedAt = triggerCanaryValidation(currentTenant(req));

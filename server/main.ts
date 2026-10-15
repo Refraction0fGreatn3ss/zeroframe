@@ -1,6 +1,6 @@
+import http from 'node:http';
+import path from 'node:path';
 import express, { type Express } from 'express';
-import http from 'http';
-import path from 'path';
 import { createApiApp } from './api.ts';
 import { API_BASE_PATH, isProduction, resolvePort } from './config.ts';
 import { startHeartbeatSimulation } from './realtime/heartbeat-simulator.ts';
@@ -37,7 +37,9 @@ async function startServer(): Promise<void> {
 
   const port = resolvePort();
   server.listen(port, '0.0.0.0', () => {
-    console.log(`[ZeroFrame Authority] Server listening on port ${port} (${isProduction() ? 'production' : 'development'})`);
+    console.log(
+      `[ZeroFrame Authority] Server listening on port ${port} (${isProduction() ? 'production' : 'development'})`,
+    );
   });
 }
 
