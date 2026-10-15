@@ -1,0 +1,6 @@
+{
+  "name": "ZeroFlash Enterprise 1.0",
+  "description": "Enterprise Network Detection & Response (NDR) and Security Operations Platform with Live Detection Assurance, Governed Response, and Dual-SOC View.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

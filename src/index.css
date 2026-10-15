@@ -1,0 +1,552 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+    /* Theme 1: Obsidian Onyx (Default) — Pure OLED Black & Laser Hyper-Cyan */
+    --zf-bg-app: #000000;
+    --zf-bg-main: #040508;
+    --zf-surface-topbar: #05070c;
+    --zf-surface-sidebar: #030408;
+    --zf-surface-card: #080a10;
+    --zf-surface-card-hover: #0e121d;
+    --zf-surface-subtle: #0b0e17;
+    --zf-surface-tertiary: #121724;
+    --zf-border-subtle: #192033;
+    --zf-border-medium: #222c44;
+    --zf-border-focus: #00f0ff;
+    --zf-text-primary: #f8fafc;
+    --zf-text-secondary: #94a3b8;
+    --zf-text-muted: #64748b;
+    --zf-brand-accent: #00f0ff;
+    --zf-brand-accent-subtle: rgba(0, 240, 255, 0.12);
+    --zf-nav-active-bg: #101626;
+    --zf-nav-active-border: #00f0ff;
+    --zf-table-header-bg: #07090f;
+    --zf-table-row-hover: #0c101a;
+  }
+
+  /* Theme 2: Midnight Phantom — Deep Marine Navy SpecOps & Electric Azure */
+  [data-theme="midnight-phantom"] {
+    --zf-bg-app: #030714;
+    --zf-bg-main: #050c20;
+    --zf-surface-topbar: #07102b;
+    --zf-surface-sidebar: #04091a;
+    --zf-surface-card: #091536;
+    --zf-surface-card-hover: #0f2152;
+    --zf-surface-subtle: #0c1a42;
+    --zf-surface-tertiary: #13275e;
+    --zf-border-subtle: #183375;
+    --zf-border-medium: #234799;
+    --zf-border-focus: #38bdf8;
+    --zf-text-primary: #f0f6fc;
+    --zf-text-secondary: #a5b4fc;
+    --zf-text-muted: #6b82b8;
+    --zf-brand-accent: #38bdf8;
+    --zf-brand-accent-subtle: rgba(56, 189, 248, 0.15);
+    --zf-nav-active-bg: #0f2357;
+    --zf-nav-active-border: #38bdf8;
+    --zf-table-header-bg: #071230;
+    --zf-table-row-hover: #0e1e47;
+  }
+
+  /* Theme 3: Matrix Terminal — Phosphor Emerald CRT Cyber Terminal */
+  [data-theme="matrix-terminal"] {
+    --zf-bg-app: #020904;
+    --zf-bg-main: #030e06;
+    --zf-surface-topbar: #051409;
+    --zf-surface-sidebar: #020b05;
+    --zf-surface-card: #06190b;
+    --zf-surface-card-hover: #0b2913;
+    --zf-surface-subtle: #08200f;
+    --zf-surface-tertiary: #0f361a;
+    --zf-border-subtle: #144722;
+    --zf-border-medium: #1d6130;
+    --zf-border-focus: #10b981;
+    --zf-text-primary: #ecfdf5;
+    --zf-text-secondary: #86efac;
+    --zf-text-muted: #4ade80;
+    --zf-brand-accent: #10b981;
+    --zf-brand-accent-subtle: rgba(16, 185, 129, 0.16);
+    --zf-nav-active-bg: #0c2b14;
+    --zf-nav-active-border: #10b981;
+    --zf-table-header-bg: #041407;
+    --zf-table-row-hover: #09210e;
+  }
+
+  /* Theme 4: Tokyo Cyberpunk — High-Voltage Synthwave Violet, Neon Rose & Amber */
+  [data-theme="tokyo-cyberpunk"] {
+    --zf-bg-app: #090212;
+    --zf-bg-main: #0e041c;
+    --zf-surface-topbar: #140628;
+    --zf-surface-sidebar: #0b0217;
+    --zf-surface-card: #17072e;
+    --zf-surface-card-hover: #260c4a;
+    --zf-surface-subtle: #1e093b;
+    --zf-surface-tertiary: #2d0e57;
+    --zf-border-subtle: #41147d;
+    --zf-border-medium: #5c1bb0;
+    --zf-border-focus: #f43f5e;
+    --zf-text-primary: #fff1f2;
+    --zf-text-secondary: #f472b6;
+    --zf-text-muted: #c084fc;
+    --zf-brand-accent: #f43f5e;
+    --zf-brand-accent-subtle: rgba(244, 63, 94, 0.18);
+    --zf-nav-active-bg: #2b0c54;
+    --zf-nav-active-border: #f43f5e;
+    --zf-table-header-bg: #120524;
+    --zf-table-row-hover: #1f0a3d;
+  }
+
+  /* Theme 5: Solaris Daylight — Surgical White High-Clarity Daylight Operations */
+  [data-theme="solaris-daylight"] {
+    --zf-bg-app: #f1f5f9;
+    --zf-bg-main: #f8fafc;
+    --zf-surface-topbar: #ffffff;
+    --zf-surface-sidebar: #ffffff;
+    --zf-surface-card: #ffffff;
+    --zf-surface-card-hover: #f1f5f9;
+    --zf-surface-subtle: #f8fafc;
+    --zf-surface-tertiary: #e2e8f0;
+    --zf-border-subtle: #e2e8f0;
+    --zf-border-medium: #cbd5e1;
+    --zf-border-focus: #2563eb;
+    --zf-text-primary: #0f172a;
+    --zf-text-secondary: #334155;
+    --zf-text-muted: #64748b;
+    --zf-brand-accent: #2563eb;
+    --zf-brand-accent-subtle: rgba(37, 99, 235, 0.10);
+    --zf-nav-active-bg: #e2e8f0;
+    --zf-nav-active-border: #2563eb;
+    --zf-table-header-bg: #f8fafc;
+    --zf-table-row-hover: #f1f5f9;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--zf-bg-app);
+    color: var(--zf-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  code, kbd, samp, pre {
+    font-family: var(--font-mono);
+  }
+}
+
+/* =========================================================================
+   MASTER PALETTE 5: SOLARIS PURE LIGHT (SURGICAL DAYLIGHT)
+   Transforms all hardcoded dark components into crisp daylight presentation
+   ========================================================================= */
+
+[data-theme="solaris-daylight"] {
+  color-scheme: light;
+}
+
+[data-theme="solaris-daylight"] body {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Transform all dark surfaces, cards, and containers to clean white/porcelain */
+[data-theme="solaris-daylight"] .bg-\[\#080c14\],
+[data-theme="solaris-daylight"] .bg-\[\#090d16\],
+[data-theme="solaris-daylight"] .bg-\[\#060911\],
+[data-theme="solaris-daylight"] .bg-\[\#060910\],
+[data-theme="solaris-daylight"] .bg-\[\#0d121f\],
+[data-theme="solaris-daylight"] .bg-\[\#101215\],
+[data-theme="solaris-daylight"] .bg-\[\#14171c\],
+[data-theme="solaris-daylight"] .bg-\[\#12192b\],
+[data-theme="solaris-daylight"] .bg-\[\#131c33\],
+[data-theme="solaris-daylight"] .bg-\[\#0e1013\],
+[data-theme="solaris-daylight"] .bg-\[\#0e1422\],
+[data-theme="solaris-daylight"] .bg-\[\#0f111a\],
+[data-theme="solaris-daylight"] .bg-\[\#05070c\],
+[data-theme="solaris-daylight"] .bg-\[\#181b20\],
+[data-theme="solaris-daylight"] .bg-\[\#0b0f19\],
+[data-theme="solaris-daylight"] .bg-\[\#070b14\],
+[data-theme="solaris-daylight"] .bg-\[\#050a14\],
+[data-theme="solaris-daylight"] .bg-\[\#0f1118\],
+[data-theme="solaris-daylight"] .bg-\[\#121b2e\],
+[data-theme="solaris-daylight"] .bg-\[\#0e121e\],
+[data-theme="solaris-daylight"] .bg-\[\#0e1526\],
+[data-theme="solaris-daylight"] .bg-\[\#0f1422\],
+[data-theme="solaris-daylight"] .bg-\[\#101728\],
+[data-theme="solaris-daylight"] .bg-\[\#161d30\],
+[data-theme="solaris-daylight"] .bg-\[\#0d0f12\],
+[data-theme="solaris-daylight"] .bg-\[\#121417\],
+[data-theme="solaris-daylight"] .bg-\[\#15181e\],
+[data-theme="solaris-daylight"] .bg-\[\#181c22\],
+[data-theme="solaris-daylight"] .bg-\[\#060b14\],
+[data-theme="solaris-daylight"] .bg-\[\#0a121d\],
+[data-theme="solaris-daylight"] .bg-\[\#0a1410\],
+[data-theme="solaris-daylight"] .bg-\[\#131b2e\],
+[data-theme="solaris-daylight"] .bg-\[\#151e33\],
+[data-theme="solaris-daylight"] .bg-\[\#1b2640\],
+[data-theme="solaris-daylight"] .bg-\[\#0b101d\],
+[data-theme="solaris-daylight"] .bg-\[\#20242a\],
+[data-theme="solaris-daylight"] .bg-\[\#131518\],
+[data-theme="solaris-daylight"] .bg-\[\#131519\],
+[data-theme="solaris-daylight"] .bg-\[\#15171b\],
+[data-theme="solaris-daylight"] .bg-\[\#1e232a\],
+[data-theme="solaris-daylight"] .bg-\[\#1c2026\],
+[data-theme="solaris-daylight"] .bg-\[\#20252c\],
+[data-theme="solaris-daylight"] .bg-\[\#252b35\],
+[data-theme="solaris-daylight"] .bg-\[\#0a0c0e\],
+[data-theme="solaris-daylight"] .bg-\[\#121418\],
+[data-theme="solaris-daylight"] .bg-\[\#0e1726\],
+[data-theme="solaris-daylight"] .bg-\[\#1a140a\],
+[data-theme="solaris-daylight"] .bg-\[\#1c0f11\],
+[data-theme="solaris-daylight"] .bg-\[\#3d2c14\],
+[data-theme="solaris-daylight"] .bg-\[\#543d1a\],
+[data-theme="solaris-daylight"] .bg-slate-900,
+[data-theme="solaris-daylight"] .bg-slate-950,
+[data-theme="solaris-daylight"] .bg-zinc-900,
+[data-theme="solaris-daylight"] .bg-zinc-950 {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Secondary daylight card fills and hovers */
+[data-theme="solaris-daylight"] .bg-slate-900\/60,
+[data-theme="solaris-daylight"] .bg-slate-900\/40,
+[data-theme="solaris-daylight"] .bg-slate-800\/80,
+[data-theme="solaris-daylight"] .bg-slate-800\/50,
+[data-theme="solaris-daylight"] .bg-slate-800\/40,
+[data-theme="solaris-daylight"] .bg-slate-800\/30,
+[data-theme="solaris-daylight"] .bg-slate-800 {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Soft semantic pastel badges for daylight */
+[data-theme="solaris-daylight"] .bg-cyan-950\/40,
+[data-theme="solaris-daylight"] .bg-cyan-950\/60,
+[data-theme="solaris-daylight"] .bg-cyan-950\/70,
+[data-theme="solaris-daylight"] .bg-cyan-950\/80 {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #bfdbfe !important;
+}
+
+[data-theme="solaris-daylight"] .bg-rose-950\/40,
+[data-theme="solaris-daylight"] .bg-rose-950\/60,
+[data-theme="solaris-daylight"] .bg-rose-950\/70,
+[data-theme="solaris-daylight"] .bg-rose-950\/80 {
+  background-color: #fff1f2 !important;
+  color: #be123c !important;
+  border-color: #fecdd3 !important;
+}
+
+[data-theme="solaris-daylight"] .bg-amber-950\/40,
+[data-theme="solaris-daylight"] .bg-amber-950\/60,
+[data-theme="solaris-daylight"] .bg-amber-950\/70,
+[data-theme="solaris-daylight"] .bg-amber-950\/80 {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+[data-theme="solaris-daylight"] .bg-emerald-950\/40,
+[data-theme="solaris-daylight"] .bg-emerald-950\/60,
+[data-theme="solaris-daylight"] .bg-emerald-950\/70,
+[data-theme="solaris-daylight"] .bg-emerald-950\/80 {
+  background-color: #f0fdf4 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+}
+
+/* Table header & structural bar styling in daylight */
+[data-theme="solaris-daylight"] thead,
+[data-theme="solaris-daylight"] thead tr,
+[data-theme="solaris-daylight"] thead th {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+[data-theme="solaris-daylight"] tbody tr {
+  border-color: #f1f5f9 !important;
+}
+
+[data-theme="solaris-daylight"] tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Structural borders in daylight */
+[data-theme="solaris-daylight"] .border-slate-800,
+[data-theme="solaris-daylight"] .border-slate-800\/90,
+[data-theme="solaris-daylight"] .border-slate-800\/80,
+[data-theme="solaris-daylight"] .border-slate-800\/60,
+[data-theme="solaris-daylight"] .border-slate-800\/40,
+[data-theme="solaris-daylight"] .border-slate-850,
+[data-theme="solaris-daylight"] .border-slate-700,
+[data-theme="solaris-daylight"] .border-slate-700\/80,
+[data-theme="solaris-daylight"] .border-slate-700\/60,
+[data-theme="solaris-daylight"] .border-\[\#20242a\],
+[data-theme="solaris-daylight"] .border-\[\#23272e\],
+[data-theme="solaris-daylight"] .border-\[\#181b20\],
+[data-theme="solaris-daylight"] .border-\[\#2b323c\],
+[data-theme="solaris-daylight"] .border-slate-900,
+[data-theme="solaris-daylight"] .divide-slate-800\/60,
+[data-theme="solaris-daylight"] .divide-\[\#181b20\],
+[data-theme="solaris-daylight"] .border-rose-900\/40,
+[data-theme="solaris-daylight"] .border-rose-900\/60,
+[data-theme="solaris-daylight"] .border-amber-900\/40,
+[data-theme="solaris-daylight"] .border-amber-900\/60 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Primary and secondary text conversion in daylight */
+[data-theme="solaris-daylight"] .text-slate-100,
+[data-theme="solaris-daylight"] .text-slate-200,
+[data-theme="solaris-daylight"] .text-slate-300,
+[data-theme="solaris-daylight"] .text-zinc-100,
+[data-theme="solaris-daylight"] .text-zinc-200,
+[data-theme="solaris-daylight"] .text-zinc-300,
+[data-theme="solaris-daylight"] .text-\[\#e6edf3\] {
+  color: #0f172a !important;
+}
+
+[data-theme="solaris-daylight"] .text-slate-400,
+[data-theme="solaris-daylight"] .text-zinc-400 {
+  color: #334155 !important;
+}
+
+[data-theme="solaris-daylight"] .text-slate-500,
+[data-theme="solaris-daylight"] .text-zinc-500 {
+  color: #64748b !important;
+}
+
+[data-theme="solaris-daylight"] .text-slate-600,
+[data-theme="solaris-daylight"] .text-zinc-600 {
+  color: #94a3b8 !important;
+}
+
+/* Daylight vibrant text markers */
+[data-theme="solaris-daylight"] .text-cyan-400,
+[data-theme="solaris-daylight"] .text-cyan-300 {
+  color: #0284c7 !important;
+}
+
+[data-theme="solaris-daylight"] .text-rose-400,
+[data-theme="solaris-daylight"] .text-rose-300 {
+  color: #e11d48 !important;
+}
+
+[data-theme="solaris-daylight"] .text-amber-400,
+[data-theme="solaris-daylight"] .text-amber-300 {
+  color: #d97706 !important;
+}
+
+[data-theme="solaris-daylight"] .text-emerald-400,
+[data-theme="solaris-daylight"] .text-emerald-300 {
+  color: #059669 !important;
+}
+
+/* Daylight code blocks, badges and inputs */
+[data-theme="solaris-daylight"] code,
+[data-theme="solaris-daylight"] pre {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="solaris-daylight"] kbd {
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
+  border-color: #cbd5e1 !important;
+}
+
+[data-theme="solaris-daylight"] input,
+[data-theme="solaris-daylight"] select,
+[data-theme="solaris-daylight"] textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+
+/* =========================================================================
+   MASTER PALETTE 2: COBALT SPECTRE (DEEP ABYSSAL NAVY & ELECTRIC AZURE)
+   Transforms all surfaces into rich navy sapphire operations console
+   ========================================================================= */
+
+[data-theme="midnight-phantom"] body {
+  background-color: #030718 !important;
+}
+
+[data-theme="midnight-phantom"] .bg-\[\#080c14\],
+[data-theme="midnight-phantom"] .bg-\[\#090d16\],
+[data-theme="midnight-phantom"] .bg-\[\#060911\],
+[data-theme="midnight-phantom"] .bg-\[\#101215\],
+[data-theme="midnight-phantom"] .bg-\[\#060910\],
+[data-theme="midnight-phantom"] .bg-\[\#0d121f\],
+[data-theme="midnight-phantom"] .bg-\[\#14171c\],
+[data-theme="midnight-phantom"] .bg-\[\#12192b\],
+[data-theme="midnight-phantom"] .bg-\[\#131c33\],
+[data-theme="midnight-phantom"] .bg-\[\#0e1013\],
+[data-theme="midnight-phantom"] .bg-\[\#0e1422\],
+[data-theme="midnight-phantom"] .bg-\[\#0f111a\],
+[data-theme="midnight-phantom"] .bg-\[\#05070c\],
+[data-theme="midnight-phantom"] .bg-\[\#181b20\],
+[data-theme="midnight-phantom"] .bg-\[\#0b0f19\],
+[data-theme="midnight-phantom"] .bg-\[\#070b14\],
+[data-theme="midnight-phantom"] .bg-\[\#0e121e\],
+[data-theme="midnight-phantom"] .bg-\[\#0e1526\],
+[data-theme="midnight-phantom"] .bg-\[\#15181e\],
+[data-theme="midnight-phantom"] .bg-\[\#181c22\],
+[data-theme="midnight-phantom"] .bg-\[\#20242a\] {
+  background-color: #071330 !important;
+}
+
+[data-theme="midnight-phantom"] .border-slate-800,
+[data-theme="midnight-phantom"] .border-slate-800\/90,
+[data-theme="midnight-phantom"] .border-slate-800\/80,
+[data-theme="midnight-phantom"] .border-slate-700,
+[data-theme="midnight-phantom"] .border-\[\#20242a\],
+[data-theme="midnight-phantom"] .border-\[\#181b20\],
+[data-theme="midnight-phantom"] .divide-slate-800\/60 {
+  border-color: #173473 !important;
+}
+
+[data-theme="midnight-phantom"] .text-cyan-400,
+[data-theme="midnight-phantom"] .text-cyan-300 {
+  color: #38bdf8 !important;
+}
+
+
+/* =========================================================================
+   MASTER PALETTE 3: VIPER CYBERPUNK (PHOSPHOR MATRIX & TOXIC EMERALD)
+   Transforms all surfaces into radioactive DEFCON phosphor green CRT terminal
+   ========================================================================= */
+
+[data-theme="matrix-terminal"] body {
+  background-color: #010a04 !important;
+}
+
+[data-theme="matrix-terminal"] .bg-\[\#080c14\],
+[data-theme="matrix-terminal"] .bg-\[\#090d16\],
+[data-theme="matrix-terminal"] .bg-\[\#060911\],
+[data-theme="matrix-terminal"] .bg-\[\#101215\],
+[data-theme="matrix-terminal"] .bg-\[\#060910\],
+[data-theme="matrix-terminal"] .bg-\[\#0d121f\],
+[data-theme="matrix-terminal"] .bg-\[\#14171c\],
+[data-theme="matrix-terminal"] .bg-\[\#12192b\],
+[data-theme="matrix-terminal"] .bg-\[\#131c33\],
+[data-theme="matrix-terminal"] .bg-\[\#0e1013\],
+[data-theme="matrix-terminal"] .bg-\[\#0e1422\],
+[data-theme="matrix-terminal"] .bg-\[\#0f111a\],
+[data-theme="matrix-terminal"] .bg-\[\#05070c\],
+[data-theme="matrix-terminal"] .bg-\[\#181b20\],
+[data-theme="matrix-terminal"] .bg-\[\#0b0f19\],
+[data-theme="matrix-terminal"] .bg-\[\#070b14\],
+[data-theme="matrix-terminal"] .bg-\[\#0e121e\],
+[data-theme="matrix-terminal"] .bg-\[\#0e1526\],
+[data-theme="matrix-terminal"] .bg-\[\#15181e\],
+[data-theme="matrix-terminal"] .bg-\[\#181c22\],
+[data-theme="matrix-terminal"] .bg-\[\#20242a\] {
+  background-color: #04190c !important;
+}
+
+[data-theme="matrix-terminal"] .border-slate-800,
+[data-theme="matrix-terminal"] .border-slate-800\/90,
+[data-theme="matrix-terminal"] .border-slate-800\/80,
+[data-theme="matrix-terminal"] .border-slate-700,
+[data-theme="matrix-terminal"] .border-\[\#20242a\],
+[data-theme="matrix-terminal"] .border-\[\#181b20\],
+[data-theme="matrix-terminal"] .divide-slate-800\/60 {
+  border-color: #124d22 !important;
+}
+
+[data-theme="matrix-terminal"] .text-cyan-400,
+[data-theme="matrix-terminal"] .text-cyan-300 {
+  color: #10b981 !important;
+}
+
+[data-theme="matrix-terminal"] .text-slate-100,
+[data-theme="matrix-terminal"] .text-slate-200,
+[data-theme="matrix-terminal"] .text-zinc-100,
+[data-theme="matrix-terminal"] .text-zinc-200 {
+  color: #ecfdf5 !important;
+}
+
+
+/* =========================================================================
+   MASTER PALETTE 4: KITSUNE NEON (TOKYO SYNTHWAVE & HOT MAGENTA ROSE)
+   Transforms all surfaces into high-voltage Tokyo after-hours violet & rose
+   ========================================================================= */
+
+[data-theme="tokyo-cyberpunk"] body {
+  background-color: #0c0217 !important;
+}
+
+[data-theme="tokyo-cyberpunk"] .bg-\[\#080c14\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#090d16\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#060911\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#101215\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#060910\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#0d121f\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#14171c\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#12192b\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#131c33\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#0e1013\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#0e1422\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#0f111a\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#05070c\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#181b20\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#0b0f19\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#070b14\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#0e121e\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#0e1526\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#15181e\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#181c22\],
+[data-theme="tokyo-cyberpunk"] .bg-\[\#20242a\] {
+  background-color: #17052c !important;
+}
+
+[data-theme="tokyo-cyberpunk"] .border-slate-800,
+[data-theme="tokyo-cyberpunk"] .border-slate-800\/90,
+[data-theme="tokyo-cyberpunk"] .border-slate-800\/80,
+[data-theme="tokyo-cyberpunk"] .border-slate-700,
+[data-theme="tokyo-cyberpunk"] .border-\[\#20242a\],
+[data-theme="tokyo-cyberpunk"] .border-\[\#181b20\],
+[data-theme="tokyo-cyberpunk"] .divide-slate-800\/60 {
+  border-color: #4a1582 !important;
+}
+
+[data-theme="tokyo-cyberpunk"] .text-cyan-400,
+[data-theme="tokyo-cyberpunk"] .text-cyan-300 {
+  color: #f43f5e !important;
+}
+
+[data-theme="tokyo-cyberpunk"] .text-slate-100,
+[data-theme="tokyo-cyberpunk"] .text-slate-200,
+[data-theme="tokyo-cyberpunk"] .text-zinc-100,
+[data-theme="tokyo-cyberpunk"] .text-zinc-200 {
+  color: #fff1f2 !important;
+}
+
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--zf-surface-sidebar);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--zf-border-medium);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--zf-text-muted);
+}
