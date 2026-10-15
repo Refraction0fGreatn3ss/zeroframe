@@ -1,6 +1,0 @@
-{
-  "summary": "Comprehensive 50x Enterprise Security Hardening Plan for ZeroFrame Console:\n- Configurable operator inactivity timeout policies (5 min, 10 min, 15 min) with live cross-tab synchronization.\n- Automated DOM obfuscation & privacy screen shielding against shoulder surfing during backgrounding or warning countdowns.\n- Cryptographic key destruction and full memory sanitization (zero data remanence) on session revocation.\n- Server-side authoritative verification, progressive unlock rate limiting, and tamper-sealed audit ledger tracking.",
-  "updatedAt": "2026-10-13T18:39:37.463124977Z",
-  "requestFeedback": true,
-  "userFacing": true
-}

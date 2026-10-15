@@ -1,0 +1,23 @@
+export const ENTERPRISE_LICENSE = {
+  licenseId: 'LIC-ZF-ENT-2026-9921',
+  organization: 'ZeroFrame Global Defense Consortium',
+  tier: 'ENTERPRISE_TIER_1',
+  issuedAt: '2026-01-01T00:00:00Z',
+  expiresAt: '2027-01-01T00:00:00Z',
+  maxThroughputGbps: 100,
+  maxSensors: 250,
+  currentSensorsEnrolled: 22,
+  featuresEnabled: [
+    'LIVE_DETECTION_ASSURANCE',
+    'TARGETED_PCAP_RING_BUFFER',
+    'GOVERNED_RESPONSE_STUDIO',
+    'DUAL_CONTROL_EXECUTION_PERMITS',
+    'SECURITY_TIME_MACHINE_90D',
+    'WITNESS_PLANE_BYZANTINE_CONSENSUS',
+    'JA4_TLS_FINGERPRINTING',
+    'AIR_GAPPED_OT_INSPECTION',
+  ],
+  signatureValid: true,
+  tamperSealVerified: true,
+  publicSigningKeyId: 'KEY-ED25519-ZEROFRAME-ROOT-2026',
+};

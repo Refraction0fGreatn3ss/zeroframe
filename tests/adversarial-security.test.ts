@@ -8,13 +8,13 @@
  */
 
 import {
-  cveSecurityHeadersMiddleware,
-  cvePrototypePollutionGuardMiddleware,
-  cvePayloadInspectionWafMiddleware,
-  cveCsrfOriginGuardMiddleware,
-  cveRateLimiterMiddleware,
-  cveSafeErrorHandlerMiddleware,
-} from '../server/security-shield.ts';
+  securityHeadersMiddleware,
+  prototypePollutionGuardMiddleware,
+  payloadInspectionWafMiddleware,
+  csrfGuardMiddleware,
+  rateLimiterMiddleware,
+  safeErrorHandlerMiddleware,
+} from '../server/security/index.ts';
 
 interface MockResponse {
   statusCode: number;
@@ -96,7 +96,7 @@ async function runTestSuite() {
     const req: any = { path: '/api/v1/incidents' };
     const res = createMockResponse();
     let nextCalled = false;
-    cveSecurityHeadersMiddleware(req, res as any, () => { nextCalled = true; });
+    securityHeadersMiddleware(req, res as any, () => { nextCalled = true; });
 
     assert(nextCalled, 'Security headers middleware permits valid flow');
     assert(
@@ -146,7 +146,7 @@ async function runTestSuite() {
     };
     const res = createMockResponse();
     let nextCalled = false;
-    cvePrototypePollutionGuardMiddleware(req, res as any, () => { nextCalled = true; });
+    prototypePollutionGuardMiddleware(req, res as any, () => { nextCalled = true; });
 
     assert(!nextCalled, 'Prototype pollution payload intercepted and halted');
     assert(res.statusCode === 400, 'Prototype pollution rejected with HTTP 400');
@@ -170,7 +170,7 @@ async function runTestSuite() {
     };
     const res = createMockResponse();
     let nextCalled = false;
-    cvePayloadInspectionWafMiddleware(req, res as any, () => { nextCalled = true; });
+    payloadInspectionWafMiddleware(req, res as any, () => { nextCalled = true; });
 
     assert(!nextCalled, 'SQL Injection payload halted before business logic');
     assert(res.statusCode === 403, 'SQL Injection rejected with HTTP 403 Forbidden');
@@ -190,7 +190,7 @@ async function runTestSuite() {
     };
     const res = createMockResponse();
     let nextCalled = false;
-    cvePayloadInspectionWafMiddleware(req, res as any, () => { nextCalled = true; });
+    payloadInspectionWafMiddleware(req, res as any, () => { nextCalled = true; });
 
     assert(!nextCalled, 'OS Command Injection payload halted');
     assert(res.statusCode === 403, 'Command Injection rejected with HTTP 403');
@@ -210,7 +210,7 @@ async function runTestSuite() {
     };
     const res = createMockResponse();
     let nextCalled = false;
-    cvePayloadInspectionWafMiddleware(req, res as any, () => { nextCalled = true; });
+    payloadInspectionWafMiddleware(req, res as any, () => { nextCalled = true; });
 
     assert(!nextCalled, 'Directory traversal (../../) payload halted');
     assert(res.statusCode === 403, 'Path Traversal rejected with HTTP 403');
@@ -229,7 +229,7 @@ async function runTestSuite() {
     };
     const res = createMockResponse();
     let nextCalled = false;
-    cvePayloadInspectionWafMiddleware(req, res as any, () => { nextCalled = true; });
+    payloadInspectionWafMiddleware(req, res as any, () => { nextCalled = true; });
 
     assert(!nextCalled, 'Log4Shell / JNDI string halted');
     assert(res.statusCode === 403, 'Log4Shell rejected with HTTP 403');
@@ -251,7 +251,7 @@ async function runTestSuite() {
     };
     const res1 = createMockResponse();
     let nextCalled1 = false;
-    cvePayloadInspectionWafMiddleware(req1, res1 as any, () => { nextCalled1 = true; });
+    payloadInspectionWafMiddleware(req1, res1 as any, () => { nextCalled1 = true; });
 
     assert(!nextCalled1, 'SSRF targeting metadata.google.internal halted');
     assert(res1.statusCode === 403, 'GCP metadata probe rejected with HTTP 403');
@@ -268,7 +268,7 @@ async function runTestSuite() {
     };
     const res2 = createMockResponse();
     let nextCalled2 = false;
-    cvePayloadInspectionWafMiddleware(req2, res2 as any, () => { nextCalled2 = true; });
+    payloadInspectionWafMiddleware(req2, res2 as any, () => { nextCalled2 = true; });
 
     assert(!nextCalled2, 'SSRF targeting 169.254.169.254 halted');
     assert(res2.statusCode === 403, '169.254.169.254 probe rejected with HTTP 403');
@@ -285,7 +285,7 @@ async function runTestSuite() {
     };
     const res3 = createMockResponse();
     let nextCalled3 = false;
-    cvePayloadInspectionWafMiddleware(req3, res3 as any, () => { nextCalled3 = true; });
+    payloadInspectionWafMiddleware(req3, res3 as any, () => { nextCalled3 = true; });
 
     assert(!nextCalled3, 'SSRF targeting decimal IP (2130706433 / localhost) halted');
     assert(res3.statusCode === 403, 'Decimal IP probe rejected with HTTP 403');
@@ -302,7 +302,7 @@ async function runTestSuite() {
     };
     const resA = createMockResponse();
     let nextCalledA = false;
-    cveCsrfOriginGuardMiddleware(reqA, resA as any, () => { nextCalledA = true; });
+    csrfGuardMiddleware(reqA, resA as any, () => { nextCalledA = true; });
 
     assert(!nextCalledA, 'Mutating request without custom enterprise headers blocked');
     assert(resA.statusCode === 403, 'CSRF rejection returns HTTP 403 Forbidden');
@@ -318,7 +318,7 @@ async function runTestSuite() {
     };
     const resB = createMockResponse();
     let nextCalledB = false;
-    cveCsrfOriginGuardMiddleware(reqB, resB as any, () => { nextCalledB = true; });
+    csrfGuardMiddleware(reqB, resB as any, () => { nextCalledB = true; });
 
     assert(!nextCalledB, 'Cross-site fetch (sec-fetch-site: cross-site) halted');
     assert(resB.statusCode === 403, 'Sec-Fetch-Site cross-site fetch returns HTTP 403');
@@ -335,7 +335,7 @@ async function runTestSuite() {
     };
     const resC = createMockResponse();
     let nextCalledC = false;
-    cveCsrfOriginGuardMiddleware(reqC, resC as any, () => { nextCalledC = true; });
+    csrfGuardMiddleware(reqC, resC as any, () => { nextCalledC = true; });
 
     assert(nextCalledC, 'Authorized same-origin request with custom headers permitted');
   }
@@ -347,7 +347,7 @@ async function runTestSuite() {
     const req: any = {};
     const res = createMockResponse();
     let nextCalled = false;
-    cveSafeErrorHandlerMiddleware(err, req, res as any, () => { nextCalled = true; });
+    safeErrorHandlerMiddleware(err, req, res as any, () => { nextCalled = true; });
 
     assert(res.statusCode === 500, 'Server error returns status 500');
     assert(
