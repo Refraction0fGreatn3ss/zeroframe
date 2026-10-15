@@ -19,7 +19,7 @@ export const useExecutionPermits = () => {
     items: permits,
     setItems: setPermits,
     isLoading,
-  } = useTenantScopedList(fetchPermits, 'Failed to load permits from backend authority');
+  } = useTenantScopedList('execution-permits', fetchPermits, 'Failed to load permits from backend authority');
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
   useEffect(() => {

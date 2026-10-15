@@ -2,6 +2,7 @@ import type { FC } from 'react';
 import { useAppStore } from '../../../stores/app-store';
 import { useDrawerStore } from '../../../stores/context-drawer-store';
 import { useDashboardStore } from '../../../stores/dashboard-store';
+import { useKillSwitch } from '../../../stores/kill-switch-store';
 import { DetectionSegment } from './DetectionSegment';
 import { InfrastructureSegment } from './InfrastructureSegment';
 import { ResponseSegment } from './ResponseSegment';
@@ -16,13 +17,14 @@ export interface TruthBarProps {
 
 export const TruthBar: FC<TruthBarProps> = ({ className = '' }) => {
   const { metrics } = useDashboardStore();
-  const { killSwitchEngaged, realtimeConnected, lastHeartbeatTimestamp } = useAppStore();
+  const { realtimeConnected, lastHeartbeatTimestamp } = useAppStore();
+  const { state: killSwitch } = useKillSwitch();
   const { openContext } = useDrawerStore();
 
   const lastKnownTime = formatTimeOfDay(lastHeartbeatTimestamp || metrics.lastCanaryAuditTime);
 
   const openProof = (category: TruthCategory) => {
-    openContext(buildTruthProofContext(category, metrics, killSwitchEngaged));
+    openContext(buildTruthProofContext(category, metrics, killSwitch));
   };
 
   const segmentProps = { metrics, realtimeConnected, lastKnownTime, onOpenProof: openProof };
@@ -35,11 +37,7 @@ export const TruthBar: FC<TruthBarProps> = ({ className = '' }) => {
       <InfrastructureSegment {...segmentProps} />
       <VisibilitySegment {...segmentProps} />
       <DetectionSegment {...segmentProps} />
-      <ResponseSegment
-        killSwitchEngaged={killSwitchEngaged}
-        realtimeConnected={realtimeConnected}
-        onOpenProof={openProof}
-      />
+      <ResponseSegment killSwitch={killSwitch} realtimeConnected={realtimeConnected} onOpenProof={openProof} />
     </div>
   );
 };

@@ -1,46 +1,39 @@
 import { ShieldCheck } from 'lucide-react';
 import type { FC } from 'react';
+import type { KillSwitchState } from '../../../stores/kill-switch-store';
 import { TruthSegment, TruthSegmentCaption, TruthSegmentHeadline } from './TruthSegment';
 import type { TruthCategory } from './truth-bar.types';
 import { getStatusDotClass, getStatusTextClass, STALE_BORDER_CLASS } from './truth-bar.utils';
 
 interface ResponseSegmentProps {
-  killSwitchEngaged: boolean;
+  killSwitch: KillSwitchState;
   realtimeConnected: boolean;
   onOpenProof: (category: TruthCategory) => void;
 }
 
-const getBorderClass = (realtimeConnected: boolean, killSwitchEngaged: boolean): string => {
-  if (!realtimeConnected) return STALE_BORDER_CLASS;
-  return killSwitchEngaged ? 'border-amber-500/40' : 'border-emerald-500/20';
+const KILL_SWITCH_LABELS: Record<KillSwitchState, { headline: string; caption: string; border: string }> = {
+  ENGAGED: { headline: 'Response Blocked', caption: 'Safety Kill-Switch Engaged', border: 'border-amber-500/40' },
+  DISENGAGED: { headline: 'Governed Active', caption: 'Dual-Control Permitted', border: 'border-emerald-500/20' },
+  UNKNOWN: { headline: 'Response Unknown', caption: 'Kill-Switch Unconfirmed', border: STALE_BORDER_CLASS },
 };
 
-export const ResponseSegment: FC<ResponseSegmentProps> = ({ killSwitchEngaged, realtimeConnected, onOpenProof }) => {
-  const isHealthy = realtimeConnected && !killSwitchEngaged;
+export const ResponseSegment: FC<ResponseSegmentProps> = ({ killSwitch, realtimeConnected, onOpenProof }) => {
+  const isHealthy = realtimeConnected && killSwitch === 'DISENGAGED';
+  const labels = KILL_SWITCH_LABELS[killSwitch];
 
   return (
     <TruthSegment
       label="Respondable"
       icon={ShieldCheck}
       iconColorClassName={getStatusTextClass(isHealthy)}
-      borderClassName={getBorderClass(realtimeConnected, killSwitchEngaged)}
+      borderClassName={realtimeConnected ? labels.border : STALE_BORDER_CLASS}
       isStale={!realtimeConnected}
       onClick={() => onOpenProof('RESPONSE')}
     >
       <TruthSegmentHeadline dotClassName={getStatusDotClass(isHealthy)}>
-        {!realtimeConnected
-          ? `Last Known (${killSwitchEngaged ? 'Blocked' : 'Active'})`
-          : killSwitchEngaged
-            ? 'Response Blocked'
-            : 'Governed Active'}
+        {realtimeConnected ? labels.headline : `Last Known (${labels.headline})`}
       </TruthSegmentHeadline>
-      <TruthSegmentCaption>
-        {!realtimeConnected
-          ? 'Stream Disconnected'
-          : killSwitchEngaged
-            ? 'Safety Kill-Switch Disarmed'
-            : 'Dual-Control Permitted'}
-      </TruthSegmentCaption>
+      <TruthSegmentCaption>{realtimeConnected ? labels.caption : 'Stream Disconnected'}</TruthSegmentCaption>
     </TruthSegment>
   );
 };

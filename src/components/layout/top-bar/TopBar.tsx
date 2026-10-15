@@ -65,7 +65,7 @@ export const TopBar: React.FC = () => {
         <BrandHomeLink onNavigateHome={() => setCurrentPath('/overview')} />
         <WireTapStatus />
         <TenantSwitcher
-          selectedTenantId={currentTenant?.id || currentTenantId}
+          selectedTenantId={currentTenant?.id ?? currentTenantId ?? ''}
           tenants={tenants}
           isSwitching={isSwitching}
           onSwitchTenant={switchTenant}

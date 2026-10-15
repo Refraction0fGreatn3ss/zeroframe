@@ -27,7 +27,11 @@ const witnessEndpointUrl = (nodeId: string): string =>
   `https://${nodeId.toLowerCase()}.internal:${WITNESS_ENDPOINT_PORT}`;
 
 export const WitnessPlanePage: React.FC = () => {
-  const { items: nodes, isLoading } = useTenantScopedList(fetchWitnessNodes, 'Failed to load witness nodes');
+  const { items: nodes, isLoading } = useTenantScopedList(
+    'witness-nodes',
+    fetchWitnessNodes,
+    'Failed to load witness nodes',
+  );
 
   return (
     <div className="p-5 space-y-5 text-[#e6edf3] max-w-[1520px] mx-auto font-sans">

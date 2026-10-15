@@ -14,6 +14,7 @@ interface TenantScopedList<T> {
  * `fetchItems` must be referentially stable (e.g. defined at module scope).
  */
 export const useTenantScopedList = <T>(
+  registryKey: string,
   fetchItems: () => Promise<T[] | null | undefined>,
   errorMessage: string,
 ): TenantScopedList<T> => {
@@ -35,17 +36,17 @@ export const useTenantScopedList = <T>(
   useEffect(() => {
     reload();
 
-    const unregister = tenantRegistry.register(
-      () => setItems([]),
-      async () => {
+    const unregister = tenantRegistry.register(registryKey, {
+      clear: () => setItems([]),
+      reload: async () => {
         await reload();
       },
-    );
+    });
 
     return () => {
       unregister();
     };
-  }, [reload]);
+  }, [reload, registryKey]);
 
   return { items, setItems, isLoading, reload };
 };

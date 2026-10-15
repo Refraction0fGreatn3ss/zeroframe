@@ -51,14 +51,12 @@ async function loadData() {
   }
 }
 
-loadData();
-
-tenantRegistry.register(
-  () => assuranceStore.setState({ capabilities: [] }),
-  async () => {
+tenantRegistry.register('detection-assurance', {
+  clear: () => assuranceStore.setState({ capabilities: [] }),
+  reload: async () => {
     await loadData();
   },
-);
+});
 
 realtimeClient.onMessage((msg) => {
   if (msg.type === 'CANARY_VALIDATION_COMPLETED') {

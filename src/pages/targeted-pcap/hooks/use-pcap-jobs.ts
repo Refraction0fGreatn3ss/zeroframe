@@ -54,12 +54,12 @@ export const usePcapJobs = (bpfFilter: string) => {
       );
     });
 
-    const unreg = tenantRegistry.register(
-      () => setJobs([]),
-      async () => {
+    const unreg = tenantRegistry.register('targeted-pcap-page', {
+      clear: () => setJobs([]),
+      reload: async () => {
         await loadCaptures();
       },
-    );
+    });
 
     return () => {
       unsubCompleted();

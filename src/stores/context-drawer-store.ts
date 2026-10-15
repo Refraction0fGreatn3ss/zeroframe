@@ -1,5 +1,6 @@
 import { createStore, useStore } from '../lib/create-store';
 import type { ContextItem } from '../types/context-drawer';
+import { tenantRegistry } from './tenant-registry';
 
 export type { ContextItem, ContextItemData, ContextType } from '../types/context-drawer';
 
@@ -40,6 +41,10 @@ export const drawerActions = {
     drawerStore.setState({ isOpen: false });
   },
 
+  reset() {
+    drawerStore.setState({ isOpen: false, history: [], currentIndex: -1 });
+  },
+
   goBack() {
     if (canGoBack(drawerStore.getState())) {
       drawerStore.setState((state) => ({ currentIndex: state.currentIndex - 1 }));
@@ -52,6 +57,8 @@ export const drawerActions = {
     }
   },
 };
+
+tenantRegistry.register('context-drawer', { clear: () => drawerActions.reset() });
 
 export function useDrawerStore() {
   const state = useStore(drawerStore);

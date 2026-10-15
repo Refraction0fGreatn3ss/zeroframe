@@ -1,5 +1,6 @@
 import { AlertTriangle, Shield } from 'lucide-react';
 import type React from 'react';
+import type { KillSwitchState } from '../../../stores/kill-switch-store';
 import { SummaryCard } from './SummaryCard';
 
 const HEALTHY_CAPTURE_STATE = 'HEALTHY';
@@ -7,14 +8,16 @@ const HEALTHY_CAPTURE_STATE = 'HEALTHY';
 interface ProtectionPostureCardsProps {
   captureState: string;
   observationCoveragePct: number;
-  killSwitchEngaged: boolean;
+  killSwitch: KillSwitchState;
 }
 
 export const ProtectionPostureCards: React.FC<ProtectionPostureCardsProps> = ({
   captureState,
   observationCoveragePct,
-  killSwitchEngaged,
+  killSwitch,
 }) => {
+  const killSwitchEngaged = killSwitch === 'ENGAGED';
+  const killSwitchUnknown = killSwitch === 'UNKNOWN';
   const isCaptureHealthy = captureState === HEALTHY_CAPTURE_STATE;
 
   return (
@@ -39,17 +42,25 @@ export const ProtectionPostureCards: React.FC<ProtectionPostureCardsProps> = ({
 
       <SummaryCard
         label="Autonomous Protection"
-        valueClassName={`text-sm font-semibold flex items-center gap-1.5 ${killSwitchEngaged ? 'text-amber-400' : 'text-emerald-400'}`}
+        valueClassName={`text-sm font-semibold flex items-center gap-1.5 ${killSwitchUnknown ? 'text-slate-400' : killSwitchEngaged ? 'text-amber-400' : 'text-emerald-400'}`}
         value={
           <>
             <Shield className="w-4 h-4" />
-            <span>{killSwitchEngaged ? 'Response Blocked (Kill-Switch Active)' : 'Active Protection Mode'}</span>
+            <span>
+              {killSwitchUnknown
+                ? 'Response State Unknown'
+                : killSwitchEngaged
+                  ? 'Response Blocked (Kill-Switch Active)'
+                  : 'Active Protection Mode'}
+            </span>
           </>
         }
         description={
-          killSwitchEngaged
-            ? 'Safety kill switch physically engaged. Autonomous responses require explicit manual override.'
-            : 'Safety kill switch is disengaged. Authorized quarantine actions require dual-operator approval under Tier 3 rules.'
+          killSwitchUnknown
+            ? 'The backend has not confirmed the kill-switch state. Response actions stay blocked until it does.'
+            : killSwitchEngaged
+              ? 'Safety kill switch physically engaged. Autonomous responses require explicit manual override.'
+              : 'Safety kill switch is disengaged. Authorized quarantine actions require dual-operator approval under Tier 3 rules.'
         }
       />
     </div>

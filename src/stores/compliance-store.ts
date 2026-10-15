@@ -41,14 +41,12 @@ async function loadCompliance() {
   }
 }
 
-loadCompliance();
-
-tenantRegistry.register(
-  () => complianceStore.setState({ frameworks: [] }),
-  async () => {
+tenantRegistry.register('compliance', {
+  clear: () => complianceStore.setState({ frameworks: [] }),
+  reload: async () => {
     await loadCompliance();
   },
-);
+});
 
 export const complianceActions = {
   selectFramework: (id: string) => complianceStore.setState({ selectedFrameworkId: id }),

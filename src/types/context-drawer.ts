@@ -1,4 +1,24 @@
-export type ContextType = 'IP' | 'ASSET' | 'USER' | 'DETECTOR' | 'SENSOR' | 'EVIDENCE' | 'MITRE' | 'TRUTH_PROOF';
+import type { Provenance } from './provenance';
+
+export type EntityContextType =
+  | 'ASSET'
+  | 'IP'
+  | 'MAC'
+  | 'USER'
+  | 'FLOW'
+  | 'DOMAIN'
+  | 'INDICATOR'
+  | 'CVE'
+  | 'SENSOR'
+  | 'SITE'
+  | 'VLAN'
+  | 'DETECTOR'
+  | 'INCIDENT'
+  | 'ALERT'
+  | 'EVIDENCE'
+  | 'RESPONSE_TRANSACTION';
+
+export type ContextType = EntityContextType | 'MITRE' | 'TRUTH_PROOF';
 
 export interface ContextAuthEvent {
   time: string;
@@ -17,6 +37,7 @@ export interface ContextAssociatedAsset {
 // Known fields are typed for the drawer views; the index signature lets pivots attach extra evidence fields.
 export interface ContextItemData {
   [field: string]: unknown;
+  provenance?: Provenance;
   why?: string;
   recommendation?: string;
   proof?: string[];

@@ -40,14 +40,12 @@ async function loadSensors() {
   }
 }
 
-loadSensors();
-
-tenantRegistry.register(
-  () => fleetStore.setState({ sensors: [] }),
-  async () => {
+tenantRegistry.register('fleet', {
+  clear: () => fleetStore.setState({ sensors: [] }),
+  reload: async () => {
     await loadSensors();
   },
-);
+});
 
 export const fleetActions = {
   selectSensor: (id: string) => fleetStore.setState({ selectedSensorId: id }),

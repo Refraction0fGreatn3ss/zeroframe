@@ -1,5 +1,3 @@
-import { RUNTIME_CONFIG } from '../config/runtime';
-
 export interface ExportManifest {
   exportId: string;
   tenantId: string;
@@ -89,10 +87,7 @@ export function sanitizeRecordForExport<T extends object>(
   return { sanitized: clone, redactedCount };
 }
 
-export function sanitizeExportData<T extends object>(
-  records: T[],
-  tenantScope: string = RUNTIME_CONFIG.defaultTenantId,
-): T[] {
+export function sanitizeExportData<T extends object>(records: T[], tenantScope: string): T[] {
   return records.map((record) => {
     const recordTenantId = readTenantId(record);
     const scope = typeof recordTenantId === 'string' && recordTenantId ? recordTenantId : tenantScope;

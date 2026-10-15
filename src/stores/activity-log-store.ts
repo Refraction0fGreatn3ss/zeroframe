@@ -46,10 +46,10 @@ if (typeof window !== 'undefined') {
   );
 }
 
-tenantRegistry.register(
-  () => activityLogStore.setState({ logs: [] }),
-  async () => activityLogStore.setState({ logs: [...INITIAL_ACTIVITY_LOGS] }),
-);
+tenantRegistry.register('activity-log', {
+  clear: () => activityLogStore.setState({ logs: [] }),
+  reload: async () => activityLogStore.setState({ logs: [...INITIAL_ACTIVITY_LOGS] }),
+});
 
 export const activityLogActions = {
   toggleStreaming: () => activityLogStore.setState((state) => ({ isStreaming: !state.isStreaming })),

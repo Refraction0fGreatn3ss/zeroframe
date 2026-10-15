@@ -3,7 +3,14 @@ import type { RollbackPayload } from '../types/api-payloads';
 import type { PcapCaptureRecord } from './evidence-service';
 import type { ExecutionPermitRecord } from './response-service';
 
-export type RealtimeConnectionState = 'CONNECTING' | 'CONNECTED' | 'RECONNECTING' | 'DEGRADED' | 'DISCONNECTED';
+export type RealtimeConnectionState =
+  | 'CONNECTING'
+  | 'CONNECTED'
+  | 'STALE'
+  | 'RECONNECTING'
+  | 'DEGRADED'
+  | 'DISCONNECTED'
+  | 'AUTH_REVOKED';
 
 export interface RealtimeEnvelope<TType extends string, TPayload> {
   seq: number;
@@ -60,7 +67,11 @@ export type RealtimeEvent = {
   [TType in RealtimeEventType]: RealtimeEnvelope<TType, RealtimeEventPayloads[TType]>;
 }[RealtimeEventType];
 
-export type RealtimeControlFrame = { type: 'PONG' } | { type: 'CONNECTED'; seq?: number } | { type: 'SESSION_REVOKED' };
+export type RealtimeControlFrame =
+  | { type: 'PONG' }
+  | { type: 'CONNECTED'; seq?: number }
+  | { type: 'SESSION_REVOKED'; reason?: string }
+  | { type: 'SESSION_EXPIRED'; reason?: string };
 
 export type RealtimeFrame = RealtimeControlFrame | RealtimeEvent;
 

@@ -9,6 +9,10 @@ const fetchEvidenceItems = async (): Promise<EvidenceItem[]> => {
 };
 
 export const useEvidenceItems = () => {
-  const { items, isLoading } = useTenantScopedList(fetchEvidenceItems, 'Failed to load live evidence artifacts');
+  const { items, isLoading } = useTenantScopedList(
+    'evidence-items',
+    fetchEvidenceItems,
+    'Failed to load live evidence artifacts',
+  );
   return { items, isLoading };
 };

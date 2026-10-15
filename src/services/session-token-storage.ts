@@ -1,18 +1,10 @@
 export const SESSION_TOKEN_STORAGE_KEY = 'zf_session_token';
 
-// Demo seed token so the console is usable before the first login round-trip.
-const SEED_SESSION_TOKEN = 'zf-session-tok-prod-8841-lead';
-
-export function restoreSessionToken(): string {
+export function restoreSessionToken(): string | null {
   try {
-    const storedToken = sessionStorage.getItem(SESSION_TOKEN_STORAGE_KEY);
-    if (storedToken) {
-      return storedToken;
-    }
-    sessionStorage.setItem(SESSION_TOKEN_STORAGE_KEY, SEED_SESSION_TOKEN);
-    return SEED_SESSION_TOKEN;
+    return sessionStorage.getItem(SESSION_TOKEN_STORAGE_KEY);
   } catch {
-    return SEED_SESSION_TOKEN;
+    return null;
   }
 }
 

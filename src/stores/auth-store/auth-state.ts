@@ -1,5 +1,5 @@
-import { DEFAULT_OPERATOR } from '../../data/default-operator.data';
 import { createStore } from '../../lib/create-store';
+import type { LoadIssue } from '../../lib/load-state';
 import type { OperatorIdentity, OperatorSessionRecord } from '../../types/session';
 import { readStoredLastActivity, readStoredPolicy } from './auth-storage';
 import {
@@ -9,7 +9,11 @@ import {
   WARNING_THRESHOLD_MS,
 } from './inactivity-policy';
 
+export type AuthStatus = 'INITIALIZING' | 'AUTHENTICATED' | 'UNAUTHENTICATED';
+
 export interface AuthState {
+  status: AuthStatus;
+  bootIssue: LoadIssue | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   session: OperatorSessionRecord | null;
@@ -33,11 +37,12 @@ export interface AuthState {
 function createInitialAuthState(): AuthState {
   const inactivityPolicy = readStoredPolicy();
   return {
-    // Optimistically authenticated; App validates the session against the server on mount.
-    isAuthenticated: true,
+    status: 'INITIALIZING',
+    bootIssue: null,
+    isAuthenticated: false,
     isLoading: false,
     session: null,
-    operator: DEFAULT_OPERATOR,
+    operator: null,
     isLocked: false,
     isStepUpRequired: false,
     activeSessions: [],

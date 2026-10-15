@@ -2,6 +2,7 @@ import type { FC } from 'react';
 import { useAppStore } from '../../stores/app-store';
 import { useAuthStore } from '../../stores/auth-store';
 import { useDashboardStore } from '../../stores/dashboard-store';
+import { useKillSwitch } from '../../stores/kill-switch-store';
 import { LockScreenHeading } from './components/LockScreenHeading';
 import { OperationalStateStrip } from './components/OperationalStateStrip';
 import { UnlockForm } from './components/UnlockForm';
@@ -12,7 +13,8 @@ import { formatCountdown } from './lock-screen.utils';
 const FALLBACK_SESSION_ID = 'ZF-SESSION-PROD-8841';
 
 export const LockScreenPage: FC = () => {
-  const { setOperatorLocked, killSwitchEngaged } = useAppStore();
+  const { setOperatorLocked } = useAppStore();
+  const { state: killSwitch } = useKillSwitch();
   const { unlock, logout, session, getRemainingInactivityMs, inactivityPolicy } = useAuthStore();
   // Subscribed for parity with the original page; metrics are not rendered here.
   useDashboardStore();
@@ -31,7 +33,7 @@ export const LockScreenPage: FC = () => {
       <div className="max-w-md w-full flex flex-col items-center text-center space-y-6">
         <LockScreenHeading inactivityPolicy={inactivityPolicy} timeRemaining={formatCountdown(remainingMs)} />
 
-        <OperationalStateStrip killSwitchEngaged={killSwitchEngaged} />
+        <OperationalStateStrip killSwitch={killSwitch} />
 
         <UnlockForm
           pin={pin}

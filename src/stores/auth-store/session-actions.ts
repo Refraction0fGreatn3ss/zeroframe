@@ -1,5 +1,7 @@
 import { getErrorMessage } from '../../lib/error-message';
-import { getErrorStatus } from '../../services/api-error';
+import { toLoadIssue } from '../../lib/load-state';
+import { apiClient } from '../../services/api-client';
+import { errorKindOf } from '../../services/api-error';
 import { authService } from '../../services/auth-service';
 import type { LoginCredentials } from '../../types/session';
 import { resetInactivityTimer } from './activity-tracking';
@@ -9,7 +11,6 @@ import { postAuthSyncMessage } from './cross-tab-sync';
 import { announceForceLogout, revokeLocalSession } from './session-termination';
 
 const OPERATOR_SIGN_OUT = 'OPERATOR_SIGN_OUT';
-const HTTP_UNAUTHORIZED = 401;
 
 function shareLockState(isLocked: boolean): void {
   postAuthSyncMessage({ type: 'LOCK_STATE_SYNC', isLocked });
@@ -17,10 +18,16 @@ function shareLockState(isLocked: boolean): void {
 }
 
 export async function validateSession() {
-  authStore.setState({ isLoading: true });
+  if (!apiClient.getToken()) {
+    authStore.setState({ status: 'UNAUTHENTICATED', isAuthenticated: false, bootIssue: null });
+    return;
+  }
+
+  authStore.setState({ status: 'INITIALIZING', isLoading: true, bootIssue: null });
   try {
     const { session, operator } = await authService.getSession();
     authStore.setState({
+      status: 'AUTHENTICATED',
       isAuthenticated: true,
       session,
       operator,
@@ -29,9 +36,9 @@ export async function validateSession() {
     });
     resetInactivityTimer();
   } catch (err) {
-    if (getErrorStatus(err) === HTTP_UNAUTHORIZED) {
-      authStore.setState({ isAuthenticated: false, session: null });
-    }
+    if (errorKindOf(err) === 'UNAUTHENTICATED') apiClient.setToken(null);
+    const bootIssue = errorKindOf(err) === 'UNAUTHENTICATED' ? null : toLoadIssue(err);
+    authStore.setState({ status: 'UNAUTHENTICATED', isAuthenticated: false, session: null, operator: null, bootIssue });
   } finally {
     authStore.setState({ isLoading: false });
   }
@@ -42,7 +49,9 @@ export async function login(credentials: LoginCredentials): Promise<boolean> {
   try {
     const session = await authService.login(credentials);
     authStore.setState({
+      status: 'AUTHENTICATED',
       isAuthenticated: true,
+      bootIssue: null,
       session,
       operator: session.operator,
       isLocked: false,

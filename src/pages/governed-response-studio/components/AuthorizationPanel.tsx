@@ -10,7 +10,7 @@ interface AuthorizationPanelProps {
   approver2Signed: boolean;
   isSubmitting: boolean;
   isExecuting: boolean;
-  killSwitchEngaged: boolean;
+  responseBlocked: boolean;
   executionState: ResponseActionState;
   onSignSecondApprover: () => void;
   onExecute: () => void;
@@ -23,7 +23,7 @@ export const AuthorizationPanel: FC<AuthorizationPanelProps> = ({
   approver2Signed,
   isSubmitting,
   isExecuting,
-  killSwitchEngaged,
+  responseBlocked,
   executionState,
   onSignSecondApprover,
   onExecute,
@@ -71,7 +71,7 @@ export const AuthorizationPanel: FC<AuthorizationPanelProps> = ({
       approver1Signed={approver1Signed}
       approver2Signed={approver2Signed}
       isExecuting={isExecuting}
-      killSwitchEngaged={killSwitchEngaged}
+      responseBlocked={responseBlocked}
       onExecute={onExecute}
       onRollback={onRollback}
     />

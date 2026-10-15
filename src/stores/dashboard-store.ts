@@ -9,6 +9,7 @@ import {
   type CommandCenterMetrics,
   type TelemetryPulsePayload,
 } from './dashboard-store/command-center-metrics';
+import { killSwitchActions } from './kill-switch-store';
 import { tenantRegistry } from './tenant-registry';
 
 export type { CommandCenterMetrics };
@@ -39,10 +40,6 @@ function updateMetrics(update: (metrics: CommandCenterMetrics) => CommandCenterM
   dashboardStore.setState((state) => ({ metrics: update(state.metrics) }));
 }
 
-function setKillSwitch(engaged: boolean) {
-  updateMetrics((metrics) => ({ ...metrics, governedResponseKillSwitch: engaged }));
-}
-
 async function loadData() {
   dashboardStore.setState({ isLoading: true });
   try {
@@ -54,6 +51,7 @@ async function loadData() {
       freshnessState: 'FRESH',
       lastSyncTimestamp: new Date().toISOString(),
     });
+    killSwitchActions.applyAuthoritative(metrics.governedResponseKillSwitch);
   } catch (err) {
     dashboardStore.setState({
       loadError: getErrorMessage(err, LOAD_ERROR_FALLBACK),
@@ -65,41 +63,25 @@ async function loadData() {
   }
 }
 
-loadData();
-
-tenantRegistry.register(
-  () => dashboardStore.setState({ metrics: DEFAULT_METRICS, charts: null }),
-  async () => {
+tenantRegistry.register('dashboard', {
+  clear: () => dashboardStore.setState({ metrics: DEFAULT_METRICS, charts: null }),
+  reload: async () => {
     await loadData();
   },
-);
+});
 
 realtimeClient.onMessage((msg) => {
   if (msg.type === 'TELEMETRY_PULSE') {
     const pulse: TelemetryPulsePayload = msg.payload;
     updateMetrics((metrics) => applyTelemetryPulse(metrics, pulse));
-  } else if (msg.type === 'KILL_SWITCH_CHANGED') {
-    const { governedResponseKillSwitch }: { governedResponseKillSwitch: boolean } = msg.payload;
-    setKillSwitch(governedResponseKillSwitch);
   } else if (msg.type === 'INCIDENT_STATE_CHANGED' || msg.type === 'CANARY_VALIDATION_COMPLETED') {
     loadData();
   }
 });
 
-async function toggleKillSwitch(reason?: string) {
-  const next = !dashboardStore.getState().metrics.governedResponseKillSwitch;
-  setKillSwitch(next);
-  try {
-    await dashboardService.setKillSwitch(next, reason);
-  } catch {
-    setKillSwitch(!next);
-  }
-}
-
 export const dashboardActions = {
   updateThroughput: (bps: number, pps: number, drops: number) =>
     updateMetrics((metrics) => applyThroughputSample(metrics, bps, pps, drops)),
-  toggleKillSwitch,
   refreshDashboard: () => loadData(),
 };
 

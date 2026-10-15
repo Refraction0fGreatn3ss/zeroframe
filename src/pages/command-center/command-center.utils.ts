@@ -51,7 +51,10 @@ export const formatAnomalyType = (type: AnomalySignalType): string => type.repla
 
 export const formatStageNumber = (index: number): string => `STAGE 0${index + 1}`;
 
-export const getTelemetryStatusLabel = (realtimeConnected: boolean, lastHeartbeatTimestamp: string): string =>
+export const formatLastKnown = (timestamp: string | null): string =>
+  timestamp ? new Date(timestamp).toLocaleTimeString() : 'never';
+
+export const getTelemetryStatusLabel = (realtimeConnected: boolean, lastHeartbeatTimestamp: string | null): string =>
   !realtimeConnected
-    ? `Telemetry Link Disconnected · STALE (Last known ${new Date(lastHeartbeatTimestamp).toLocaleTimeString()})`
+    ? `Telemetry Link Disconnected · STALE (Last known ${formatLastKnown(lastHeartbeatTimestamp)})`
     : 'Live Wire Telemetry & Cross-Layer Triage';

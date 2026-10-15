@@ -2,10 +2,10 @@ import type { FC } from 'react';
 import { SecurityStatusBadge } from '../../../components/shared/SecurityStatusBadge';
 
 interface StudioHeaderProps {
-  killSwitchEngaged: boolean;
+  responseBlocked: boolean;
 }
 
-export const StudioHeader: FC<StudioHeaderProps> = ({ killSwitchEngaged }) => (
+export const StudioHeader: FC<StudioHeaderProps> = ({ responseBlocked }) => (
   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-[#20242a]">
     <div>
       <h1 className="text-lg font-semibold text-zinc-100 tracking-tight">Governed Response Studio</h1>
@@ -14,6 +14,6 @@ export const StudioHeader: FC<StudioHeaderProps> = ({ killSwitchEngaged }) => (
       </p>
     </div>
 
-    <SecurityStatusBadge state={killSwitchEngaged ? 'RESPONSE_DISABLED' : 'GOVERNED'} size="md" />
+    <SecurityStatusBadge state={responseBlocked ? 'RESPONSE_DISABLED' : 'GOVERNED'} size="md" />
   </div>
 );

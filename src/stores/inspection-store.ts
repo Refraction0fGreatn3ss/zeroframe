@@ -54,14 +54,12 @@ async function loadInspection() {
   }
 }
 
-loadInspection();
-
-tenantRegistry.register(
-  () => inspectionStore.setState({ stages: [] }),
-  async () => {
+tenantRegistry.register('inspection', {
+  clear: () => inspectionStore.setState({ stages: [] }),
+  reload: async () => {
     await loadInspection();
   },
-);
+});
 
 export const inspectionActions = {
   reload: loadInspection,

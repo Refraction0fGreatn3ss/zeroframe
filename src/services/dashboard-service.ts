@@ -37,18 +37,4 @@ export const dashboardService = {
     const res = await apiClient.get<SecurityChartsData>('/dashboard/charts');
     return res.data;
   },
-
-  async setKillSwitch(
-    engaged: boolean,
-    reason?: string,
-  ): Promise<{ success: boolean; governedResponseKillSwitch: boolean }> {
-    const res = await apiClient.post<{ success: boolean; governedResponseKillSwitch: boolean }>(
-      '/dashboard/kill-switch',
-      {
-        engaged,
-        reason,
-      },
-    );
-    return res.data;
-  },
 };

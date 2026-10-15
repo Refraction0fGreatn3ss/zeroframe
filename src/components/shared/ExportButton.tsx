@@ -68,6 +68,7 @@ export const ExportButton: FC<ExportButtonProps> = ({ resourceName, recordCount,
   const closeDialog = () => setIsOpen(false);
 
   const handleDownload = () => {
+    if (!currentTenant) return;
     setIsExporting(true);
 
     setTimeout(() => {
@@ -112,7 +113,7 @@ export const ExportButton: FC<ExportButtonProps> = ({ resourceName, recordCount,
               <div>
                 <label className="text-zinc-400 block mb-1">Tenant Scope</label>
                 <div className="p-2 bg-[#131518] rounded border border-[#20242a] text-zinc-200">
-                  {currentTenant.name} ({currentTenant.id})
+                  {currentTenant ? `${currentTenant.name} (${currentTenant.id})` : 'Unresolved'}
                 </div>
               </div>
 

@@ -9,7 +9,7 @@ import { TimeRangeSelector } from './TimeRangeSelector';
 interface CommandCenterHeaderProps {
   incidents: SecurityIncident[];
   realtimeConnected: boolean;
-  lastHeartbeatTimestamp: string;
+  lastHeartbeatTimestamp: string | null;
   timeRange: TimeRange;
   onTimeRangeChange: (range: TimeRange) => void;
   onOpenHunter: () => void;

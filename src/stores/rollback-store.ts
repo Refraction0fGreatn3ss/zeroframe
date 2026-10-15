@@ -46,14 +46,12 @@ async function loadRollbackData() {
   }
 }
 
-loadRollbackData();
-
-tenantRegistry.register(
-  () => rollbackStore.setState({ checkpoints: [], quarantineHosts: [] }),
-  async () => {
+tenantRegistry.register('rollback', {
+  clear: () => rollbackStore.setState({ checkpoints: [], quarantineHosts: [] }),
+  reload: async () => {
     await loadRollbackData();
   },
-);
+});
 
 async function runResponseOperation(operation: () => Promise<void>, onFailure: (err: unknown) => void) {
   rollbackStore.setState({ isRollingBack: true });

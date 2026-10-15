@@ -20,6 +20,7 @@ export function revokeLocalSession(reason: string, isAutoLogout: boolean = true)
   apiClient.setToken(null);
 
   authStore.setState((state) => ({
+    status: 'UNAUTHENTICATED',
     isAuthenticated: false,
     session: null,
     operator: null,
@@ -33,9 +34,12 @@ export function revokeLocalSession(reason: string, isAutoLogout: boolean = true)
   }));
 }
 
-export async function triggerAutoLogout(reason: string = 'INACTIVITY_TIMEOUT') {
-  if (!authStore.getState().isAuthenticated) return;
+let autoLogoutInProgress = false;
 
+export async function triggerAutoLogout(reason: string = 'INACTIVITY_TIMEOUT') {
+  if (!authStore.getState().isAuthenticated || autoLogoutInProgress) return;
+
+  autoLogoutInProgress = true;
   authStore.setState({ isLoading: true });
   announceForceLogout(reason);
 
@@ -45,5 +49,6 @@ export async function triggerAutoLogout(reason: string = 'INACTIVITY_TIMEOUT') {
     console.warn('[AuthStore] Auto-logout backend error:', err);
   } finally {
     revokeLocalSession(reason, true);
+    autoLogoutInProgress = false;
   }
 }

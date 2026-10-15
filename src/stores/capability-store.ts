@@ -1,52 +1,35 @@
-import { createStore, useStore } from '../lib/create-store';
-import type { BackendCapability, CapabilityStatus } from '../services/capability-service';
+import { type CapabilityState, resolveCapabilityState } from '../lib/capability-state';
 import { capabilityService } from '../services/capability-service';
-import { tenantRegistry } from './tenant-registry';
+import { createResourceStore, useResource } from './core/create-resource-store';
 
-interface CapabilityStoreState {
-  status: CapabilityStatus;
-  manifestVersion: string;
-  generatedAt: string;
-  capabilities: BackendCapability[];
-  isLoading: boolean;
-}
+export type { CapabilityState } from '../lib/capability-state';
 
-const capabilityStore = createStore<CapabilityStoreState>({
-  status: 'LOADING',
-  manifestVersion: 'UNKNOWN',
-  generatedAt: new Date().toISOString(),
-  capabilities: [],
-  isLoading: false,
+export const capabilityResource = createResourceStore({
+  name: 'capabilities',
+  initialFilters: {},
+  fetch: ({ signal }) => capabilityService.getManifest({ signal }),
+  isEmpty: () => false,
 });
 
-async function loadCapabilities() {
-  capabilityStore.setState({ isLoading: true });
-  try {
-    const manifest = await capabilityService.getCapabilities();
-    capabilityStore.setState({
-      status: manifest.status,
-      manifestVersion: manifest.manifestVersion,
-      generatedAt: manifest.generatedAt,
-      capabilities: manifest.capabilities,
-    });
-  } catch {
-    capabilityStore.setState({ status: 'FAILED' });
-  } finally {
-    capabilityStore.setState({ isLoading: false });
-  }
-}
-
-loadCapabilities();
-
-tenantRegistry.register(
-  () => capabilityStore.setState({ status: 'STALE' }),
-  () => loadCapabilities(),
-);
-
 export const capabilityActions = {
-  refreshCapabilities: () => loadCapabilities(),
+  refreshCapabilities: () => capabilityResource.actions.load(),
 };
 
+export function capabilityStateOf(capabilityId: string): CapabilityState {
+  const { data, loadState } = capabilityResource.store.getState();
+  return resolveCapabilityState(capabilityId, data, loadState);
+}
+
 export function useCapabilityStore() {
-  return { ...useStore(capabilityStore), ...capabilityActions };
+  const resource = useResource(capabilityResource);
+  return {
+    ...resource,
+    stateOf: (capabilityId: string) => resolveCapabilityState(capabilityId, resource.data, resource.loadState),
+    ...capabilityActions,
+  };
+}
+
+export function useCapability(capabilityId: string | undefined): CapabilityState {
+  const { stateOf } = useCapabilityStore();
+  return capabilityId ? stateOf(capabilityId) : 'SUPPORTED';
 }

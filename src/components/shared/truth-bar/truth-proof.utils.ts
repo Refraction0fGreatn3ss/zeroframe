@@ -1,5 +1,6 @@
 import type { ContextItem } from '../../../stores/context-drawer-store';
 import type { CommandCenterMetrics } from '../../../stores/dashboard-store';
+import type { KillSwitchState } from '../../../stores/kill-switch-store';
 import type { TruthCategory } from './truth-bar.types';
 import { toPercent } from './truth-bar.utils';
 
@@ -80,31 +81,39 @@ const buildDetectionProof = (metrics: CommandCenterMetrics): ContextItem => ({
   },
 });
 
-const buildResponseProof = (killSwitchEngaged: boolean): ContextItem => ({
-  type: 'TRUTH_PROOF',
-  id: 'proof-response',
-  title: 'Response Truth: What Can Safely Be Done',
-  subtitle: killSwitchEngaged ? 'Response Blocked (Safety Kill-Switch)' : 'Governed Active (Dual-Control)',
-  data: {
-    category: 'RESPONSE',
-    killSwitchEngaged,
-    status: killSwitchEngaged ? 'BLOCKED' : 'GOVERNED_ACTIVE',
-    why: killSwitchEngaged
-      ? 'Autonomous containment physically blocked by operator command. System is restricted to observation and manual approval.'
-      : 'Autonomous containment armed with strict blast-radius verification and automated 60-minute rollback window.',
-    proof: [
-      'Dual-operator execution permit requirement enforced for Tier 1 assets',
-      'Pre-flight blast-radius simulation executes prior to network isolation',
-      'Automated rollback checkpoint saved to cryptographic evidence ledger before rule dispatch',
-    ],
-    link: '/respond/studio',
-  },
-});
+const buildResponseProof = (killSwitch: KillSwitchState): ContextItem => {
+  const killSwitchEngaged = killSwitch === 'ENGAGED';
+  return {
+    type: 'TRUTH_PROOF',
+    id: 'proof-response',
+    title: 'Response Truth: What Can Safely Be Done',
+    subtitle:
+      killSwitch === 'UNKNOWN'
+        ? 'Kill-Switch State Unconfirmed'
+        : killSwitchEngaged
+          ? 'Response Blocked (Safety Kill-Switch)'
+          : 'Governed Active (Dual-Control)',
+    data: {
+      category: 'RESPONSE',
+      killSwitch,
+      status: killSwitch === 'UNKNOWN' ? 'UNKNOWN' : killSwitchEngaged ? 'BLOCKED' : 'GOVERNED_ACTIVE',
+      why: killSwitchEngaged
+        ? 'Autonomous containment physically blocked by operator command. System is restricted to observation and manual approval.'
+        : 'Autonomous containment armed with strict blast-radius verification and automated 60-minute rollback window.',
+      proof: [
+        'Dual-operator execution permit requirement enforced for Tier 1 assets',
+        'Pre-flight blast-radius simulation executes prior to network isolation',
+        'Automated rollback checkpoint saved to cryptographic evidence ledger before rule dispatch',
+      ],
+      link: '/respond/studio',
+    },
+  };
+};
 
 export const buildTruthProofContext = (
   category: TruthCategory,
   metrics: CommandCenterMetrics,
-  killSwitchEngaged: boolean,
+  killSwitch: KillSwitchState,
 ): ContextItem => {
   switch (category) {
     case 'INFRASTRUCTURE':
@@ -114,6 +123,6 @@ export const buildTruthProofContext = (
     case 'DETECTION':
       return buildDetectionProof(metrics);
     case 'RESPONSE':
-      return buildResponseProof(killSwitchEngaged);
+      return buildResponseProof(killSwitch);
   }
 };

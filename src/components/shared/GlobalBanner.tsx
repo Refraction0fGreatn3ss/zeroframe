@@ -1,6 +1,7 @@
 import { AlertTriangle, ShieldAlert, WifiOff } from 'lucide-react';
 import type { FC, ReactNode } from 'react';
 import { useAppStore } from '../../stores/app-store';
+import { type KillSwitchState, useKillSwitch } from '../../stores/kill-switch-store';
 
 interface OperationalBanner {
   id: string;
@@ -12,21 +13,21 @@ interface OperationalBanner {
 }
 
 interface BannerConditions {
-  killSwitchEngaged: boolean;
+  killSwitch: KillSwitchState;
   realtimeConnected: boolean;
   operatingMode: string;
   onDisengageKillSwitch: () => void;
 }
 
 const getActiveBanners = ({
-  killSwitchEngaged,
+  killSwitch,
   realtimeConnected,
   operatingMode,
   onDisengageKillSwitch,
 }: BannerConditions): OperationalBanner[] => {
   const banners: OperationalBanner[] = [];
 
-  if (killSwitchEngaged) {
+  if (killSwitch === 'ENGAGED') {
     banners.push({
       id: 'killswitch',
       icon: <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />,
@@ -34,6 +35,15 @@ const getActiveBanners = ({
       text: 'Autonomous response kill-switch engaged — Automated containment actions are blocked at the controller.',
       actionText: 'Disengage',
       onAction: onDisengageKillSwitch,
+    });
+  }
+
+  if (killSwitch === 'UNKNOWN') {
+    banners.push({
+      id: 'killswitch_unknown',
+      icon: <ShieldAlert className="w-3.5 h-3.5 text-slate-400 shrink-0" />,
+      style: 'bg-[#101318] border-b border-[#20242a] text-slate-300',
+      text: 'Response kill-switch state unknown — The backend has not confirmed it. Response actions stay blocked until it does.',
     });
   }
 
@@ -77,13 +87,14 @@ const getActiveBanners = ({
 };
 
 export const GlobalBanner: FC = () => {
-  const { killSwitchEngaged, operatingMode, realtimeConnected, toggleKillSwitch } = useAppStore();
+  const { operatingMode, realtimeConnected } = useAppStore();
+  const { state: killSwitch, requestChange } = useKillSwitch();
 
   const banners = getActiveBanners({
-    killSwitchEngaged,
+    killSwitch,
     realtimeConnected,
     operatingMode,
-    onDisengageKillSwitch: toggleKillSwitch,
+    onDisengageKillSwitch: () => void requestChange(false, 'Operator disengaged from global banner'),
   });
 
   if (banners.length === 0) return null;

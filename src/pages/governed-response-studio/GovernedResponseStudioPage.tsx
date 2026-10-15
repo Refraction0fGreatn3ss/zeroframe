@@ -1,6 +1,6 @@
 import type { FC } from 'react';
-import { useAppStore } from '../../stores/app-store';
 import { useInvestigationStore } from '../../stores/investigation-store';
+import { useKillSwitch } from '../../stores/kill-switch-store';
 import { ActionParametersPanel } from './components/ActionParametersPanel';
 import { AuthorizationPanel } from './components/AuthorizationPanel';
 import { KillSwitchBanner } from './components/KillSwitchBanner';
@@ -11,19 +11,20 @@ import { useResponseTarget } from './hooks/use-response-target';
 
 export const GovernedResponseStudioPage: FC = () => {
   const { incidents } = useInvestigationStore();
-  const { killSwitchEngaged } = useAppStore();
+  const { state: killSwitchState } = useKillSwitch();
+  const responseBlocked = killSwitchState !== 'DISENGAGED';
   const target = useResponseTarget(incidents);
   const lifecycle = useResponseLifecycle({
     incident: target.incident,
     selectedAction: target.selectedAction,
-    killSwitchEngaged,
+    responseBlocked,
   });
 
   return (
     <div className="p-5 space-y-5 text-[#e6edf3] max-w-[1520px] mx-auto font-sans">
-      <StudioHeader killSwitchEngaged={killSwitchEngaged} />
+      <StudioHeader responseBlocked={responseBlocked} />
 
-      {killSwitchEngaged && <KillSwitchBanner />}
+      {killSwitchState === 'ENGAGED' && <KillSwitchBanner />}
 
       <LifecycleProgressTracker currentStepIndex={lifecycle.currentStepIndex} />
 
@@ -46,7 +47,7 @@ export const GovernedResponseStudioPage: FC = () => {
           approver2Signed={lifecycle.approver2Signed}
           isSubmitting={lifecycle.isSubmitting}
           isExecuting={lifecycle.isExecuting}
-          killSwitchEngaged={killSwitchEngaged}
+          responseBlocked={responseBlocked}
           executionState={lifecycle.executionState}
           onSignSecondApprover={lifecycle.signSecondApprover}
           onExecute={lifecycle.executeResponse}

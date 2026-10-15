@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useState } from 'react';
+import { Outlet } from 'react-router';
 import { LockScreenPage } from '../../../pages/lock-screen/LockScreenPage';
 import { useAppStore } from '../../../stores/app-store';
 import { useAuthStore } from '../../../stores/auth-store';
@@ -14,12 +15,11 @@ import { BottomStatusBar } from '../BottomStatusBar';
 import { CommandPalette } from '../command-palette/CommandPalette';
 import { Sidebar } from '../Sidebar';
 import { TopBar } from '../top-bar/TopBar';
-import { RouteContent } from './RouteContent';
 import { TenantSwitchOverlay } from './TenantSwitchOverlay';
 import { useGlobalShortcuts } from './use-global-shortcuts';
 
 export const AppShell: React.FC = () => {
-  const { currentPath, setCurrentPath, viewMode, isOperatorLocked, setCommandPaletteOpen } = useAppStore();
+  const { setCurrentPath, isOperatorLocked, setCommandPaletteOpen } = useAppStore();
   const { isLocked } = useAuthStore();
   const { isSwitching, currentTenant } = useTenantStore();
 
@@ -35,10 +35,10 @@ export const AppShell: React.FC = () => {
       <div className="flex flex-1 overflow-hidden relative">
         <Sidebar />
         <main className="flex-1 overflow-y-auto bg-[var(--zf-bg-main)]">
-          <RouteContent currentPath={currentPath} viewMode={viewMode} />
+          <Outlet />
         </main>
 
-        {isSwitching && <TenantSwitchOverlay tenantName={currentTenant.name} />}
+        {isSwitching && <TenantSwitchOverlay tenantName={currentTenant?.name ?? ''} />}
       </div>
 
       <BottomStatusBar />

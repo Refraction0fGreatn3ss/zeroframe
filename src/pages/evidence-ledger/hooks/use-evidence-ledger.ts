@@ -27,10 +27,10 @@ export const useEvidenceLedger = () => {
 
   useEffect(() => {
     loadLedger();
-    return tenantRegistry.register(
-      () => setBlocks([]),
-      () => loadLedger(),
-    );
+    return tenantRegistry.register('evidence-ledger-page', {
+      clear: () => setBlocks([]),
+      reload: () => loadLedger(),
+    });
   }, [loadLedger]);
 
   const verifyChain = () => {

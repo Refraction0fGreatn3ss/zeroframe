@@ -2,9 +2,9 @@ export interface NavItem {
   id: string;
   label: string;
   path: string;
-  badgeCountKey?: string;
-  warningKey?: string;
   description: string;
+  requiredCapability?: string;
+  badgeCountKey?: string;
 }
 
 export interface NavSection {
@@ -20,13 +20,27 @@ export const NAVIGATION_STRUCTURE: NavSection[] = [
         id: 'command-center',
         label: 'Command Center',
         path: '/overview',
-        description: 'Global NDR state, incidents, assurance, and live topology health',
+        description: 'Global NDR state, incidents, assurance, and topology health',
       },
       {
         id: 'activity-log',
         label: 'Security Activity Log',
         path: '/overview/activity-log',
-        description: 'Real-time telemetry tracking system events, user logins, and threat alerts',
+        description: 'System events, operator logins, and threat alerts',
+      },
+      {
+        id: 'search',
+        label: 'Search',
+        path: '/search',
+        description: 'Search incidents, alerts, assets, flows, indicators, CVEs and evidence',
+        requiredCapability: 'global_search',
+      },
+      {
+        id: 'reports',
+        label: 'Reports',
+        path: '/reports',
+        description: 'Backend-generated security, assurance and compliance reports',
+        requiredCapability: 'reporting',
       },
     ],
   },
@@ -38,43 +52,106 @@ export const NAVIGATION_STRUCTURE: NavSection[] = [
         label: 'Incidents & Kill Chains',
         path: '/investigate/incidents',
         badgeCountKey: 'openIncidents',
-        description: 'Correlated multi-stage security incidents mapped to MITRE ATT&CK',
+        description: 'Correlated attack chains and incident dossiers',
       },
       {
         id: 'alerts',
         label: 'Raw Alerts',
         path: '/investigate/alerts',
-        description: 'Individual detector alerts with source fidelity and packet references',
+        description: 'Detector signals before correlation',
       },
       {
         id: 'assets',
         label: 'Living Identities',
         path: '/investigate/assets',
-        description: 'Asset inventory with DHCP churn, cloud metadata, and protected asset tags',
+        description: 'Asset identity, criticality and historical identity',
       },
       {
         id: 'entity-graph',
         label: 'Entity Graph',
         path: '/investigate/entity-graph',
-        description: 'Interactive topology provenance: discovered, declared, and inferred links',
+        description: 'Who and what is related',
+      },
+      {
+        id: 'network',
+        label: 'Network Explorer',
+        path: '/investigate/network',
+        description: 'Flow analysis, application intelligence and encrypted DNS visibility',
+        requiredCapability: 'network_explorer',
       },
       {
         id: 'hunt',
         label: 'Threat Hunt',
         path: '/investigate/hunt',
-        description: 'Ad-hoc query workbench for flow metadata, JA4/JA4S fingerprints, and DNS',
+        description: 'Query-driven hunting across wire telemetry',
+      },
+      {
+        id: 'threat-intel',
+        label: 'Threat Intelligence',
+        path: '/investigate/threat-intel',
+        description: 'Indicators, reputation, local observations and feed health',
+        requiredCapability: 'threat_intelligence',
+      },
+      {
+        id: 'vulnerabilities',
+        label: 'Vulnerability & Exposure',
+        path: '/investigate/vulnerabilities',
+        description:
+          'Asset CVE intelligence, active-exploit context, observed services and authorized exposure validation',
+        requiredCapability: 'vulnerability_exposure',
+      },
+      {
+        id: 'baselines',
+        label: 'Network Memory',
+        path: '/investigate/baselines',
+        description: 'Learned normal network behavior and meaningful deviation',
+        requiredCapability: 'network_memory',
       },
       {
         id: 'scada-ot',
         label: 'SCADA / OT Grid Defense',
         path: '/investigate/scada-ot',
-        description: 'Passive optical tap monitoring for Purdue Levels 0-3, Modbus, DNP3, and physical air-gap diodes',
+        description: 'Industrial protocol monitoring',
       },
       {
         id: 'time-machine',
         label: 'Security Time Machine',
         path: '/investigate/time-machine',
-        description: 'Historical point-in-time truth reconstruction: What did ZeroFlash know then?',
+        description: 'Forensic rewind of the entity topology',
+        requiredCapability: 'security_time_machine',
+      },
+    ],
+  },
+  {
+    title: 'Assurance',
+    items: [
+      {
+        id: 'detection-assurance',
+        label: 'Live Detection Assurance',
+        path: '/assurance/detection',
+        description: 'Canary-verified detector health',
+        requiredCapability: 'live_detection_assurance',
+      },
+      {
+        id: 'detectors',
+        label: 'Detector Catalog',
+        path: '/assurance/detectors',
+        description: 'Every detector, its dependencies and current capability',
+        requiredCapability: 'detector_catalog',
+      },
+      {
+        id: 'blind-spots',
+        label: 'Blind Spots',
+        path: '/assurance/blind-spots',
+        description: 'Where observation or telemetry is missing and what it affects',
+        requiredCapability: 'blind_spots',
+      },
+      {
+        id: 'tuning',
+        label: 'Detector Tuning',
+        path: '/assurance/tuning',
+        description: 'Audited suppressions, allowlists and thresholds',
+        requiredCapability: 'detector_tuning',
       },
     ],
   },
@@ -85,25 +162,40 @@ export const NAVIGATION_STRUCTURE: NavSection[] = [
         id: 'response-studio',
         label: 'Governed Response Studio',
         path: '/respond/studio',
-        description: 'Dual-custody action planning, blast-radius verification, and scoped execution',
+        description: 'Dual-control containment workflow',
+        requiredCapability: 'response_governance',
       },
       {
-        id: 'quarantine',
-        label: 'Isolation & Quarantine',
-        path: '/respond/quarantine',
-        description: 'Network-layer containment via iptables, TCP RST injection, and BGP Flowspec',
+        id: 'response-authority',
+        label: 'Response Authority',
+        path: '/respond/authority',
+        description: 'Each independent condition that governs whether response may act',
+        requiredCapability: 'response_governance',
+      },
+      {
+        id: 'protected-assets',
+        label: 'Protected Assets',
+        path: '/respond/protected-assets',
+        description: 'Backend-enforced response policy per protected asset',
+        requiredCapability: 'protected_assets',
       },
       {
         id: 'permits',
         label: 'Execution Permits',
         path: '/respond/permits',
-        description: 'Witness notary co-signed permits and dual-control approvals',
+        description: 'Dual-control execution permits',
+      },
+      {
+        id: 'quarantine',
+        label: 'Isolation & Quarantine',
+        path: '/respond/quarantine',
+        description: 'Active isolations',
       },
       {
         id: 'rollback',
         label: 'Rollback Console',
         path: '/respond/rollback',
-        description: 'One-click safe rollback for response actions and sensor configurations',
+        description: 'Compensating rollback of response actions',
       },
     ],
   },
@@ -113,32 +205,41 @@ export const NAVIGATION_STRUCTURE: NavSection[] = [
       {
         id: 'evidence-center',
         label: 'Evidence Center',
-        path: '/evidence/center',
-        description: 'Forensic evidence collection, chain-of-custody, and legal holds',
+        path: '/evidence',
+        description: 'Collected evidence artifacts',
       },
       {
-        id: 'evidence-ledger',
+        id: 'ledger',
         label: 'Cryptographic Ledger',
         path: '/evidence/ledger',
-        description: 'SHA-256 Merkle hash chained blocks and cryptographic sealing',
+        description: 'Hash-chained evidence ledger',
       },
       {
-        id: 'targeted-pcap',
+        id: 'pcap',
         label: 'Targeted PCAP',
         path: '/evidence/pcap',
-        description: 'On-demand high-precision packet captures and incident slices',
+        description: 'Ring-buffer packet extraction',
+        requiredCapability: 'targeted_pcap',
       },
       {
         id: 'vault',
         label: 'Vault & Master Keys',
         path: '/evidence/vault',
-        description: 'Hardware/software token management, SPIFFE identities, and encryption keys',
+        description: 'Key custody',
       },
       {
-        id: 'witness-plane',
+        id: 'witness',
         label: 'Witness Plane',
         path: '/evidence/witness',
-        description: 'Independent dual-custody authorization notary and consensus nodes',
+        description: 'Independent witness quorum',
+        requiredCapability: 'witness_quorum',
+      },
+      {
+        id: 'exports',
+        label: 'Export Jobs',
+        path: '/evidence/exports',
+        description: 'Backend export jobs, formats and artifact hashes',
+        requiredCapability: 'export_jobs',
       },
     ],
   },
@@ -149,44 +250,95 @@ export const NAVIGATION_STRUCTURE: NavSection[] = [
         id: 'fleet',
         label: 'Sensor Fleet',
         path: '/system/fleet',
-        description: 'Physical & virtual sensors, capture drivers, mTLS trust, and outbox depth',
+        description: 'Sensors, enrollment, trust and software lifecycle',
       },
       {
-        id: 'inspection-integrity',
+        id: 'deployment',
+        label: 'Deployment & Preflight',
+        path: '/system/deployment',
+        description: 'What ZeroFrame will actually see if a sensor is deployed',
+        requiredCapability: 'deployment_preflight',
+      },
+      {
+        id: 'topology',
+        label: 'Topology & Visibility',
+        path: '/system/topology',
+        description: 'Where ZeroFrame can physically and logically observe',
+        requiredCapability: 'topology_visibility',
+      },
+      {
+        id: 'inspection',
         label: 'Inspection Integrity',
         path: '/system/inspection',
-        description: 'Capture -> L2 -> L3 -> Session -> Crypto observation path diagnostics',
+        description: 'Observation pipeline integrity',
+        requiredCapability: 'protocol_inspection',
       },
       {
-        id: 'detection-assurance',
-        label: 'Live Detection Assurance',
-        path: '/system/assurance',
-        description: 'Continuous safe signed canaries verifying detector capability right now',
+        id: 'diagnostics',
+        label: 'System Diagnostics',
+        path: '/system/diagnostics',
+        description: 'Product component health, resource governor and build identity',
+        requiredCapability: 'system_diagnostics',
       },
       {
         id: 'integrations',
         label: 'Integrations',
         path: '/system/integrations',
-        description: 'Defender XDR, CrowdStrike Falcon, Cortex XDR, Splunk, ServiceNow',
+        description: 'Connected security tools',
       },
       {
         id: 'compliance',
         label: 'Compliance Center',
         path: '/system/compliance',
-        description: 'Evidence-backed mappings for UAE IAR, Qatar NIA, Saudi NCA, NIST CSF, PCI DSS',
+        description: 'Framework evidence and control state',
+        requiredCapability: 'compliance_frameworks',
       },
       {
         id: 'licensing',
         label: 'Enterprise Licensing',
         path: '/system/licensing',
-        description: 'Cryptographically signed offline enterprise license and capacity tiers',
+        description: 'License entitlements',
       },
       {
-        id: 'audit-log',
+        id: 'support',
+        label: 'Support Bundle',
+        path: '/system/support',
+        description: 'Redacted diagnostic bundles for support',
+        requiredCapability: 'support_bundle',
+      },
+    ],
+  },
+  {
+    title: 'Admin',
+    items: [
+      {
+        id: 'admin',
         label: 'Audit Log & RBAC',
-        path: '/system/audit',
-        description: 'Operator actions, response commands, permission changes, and tenant boundaries',
+        path: '/admin',
+        description: 'Operator audit trail and access control',
+      },
+      {
+        id: 'tenants',
+        label: 'Tenant Administration',
+        path: '/admin/tenants',
+        description: 'Tenants, retention, licensing and health',
+        requiredCapability: 'tenant_administration',
       },
     ],
   },
 ];
+
+export const ROUTE_REDIRECTS: Record<string, string> = {
+  '/': '/overview',
+  '/evidence/center': '/evidence',
+  '/system/assurance': '/assurance/detection',
+  '/system/audit': '/admin',
+};
+
+export const ALL_NAV_ITEMS: NavItem[] = NAVIGATION_STRUCTURE.flatMap((section) => section.items);
+
+const NAV_ITEMS_BY_SPECIFICITY = [...ALL_NAV_ITEMS].sort((a, b) => b.path.length - a.path.length);
+
+export function findNavItem(path: string): NavItem | undefined {
+  return NAV_ITEMS_BY_SPECIFICITY.find((item) => path === item.path || path.startsWith(`${item.path}/`));
+}

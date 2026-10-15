@@ -5,7 +5,7 @@ import { OperationalStatusIcon } from './OperationalStatusIcon';
 interface OperationalStatusCardProps {
   status: OperationalStatus;
   incidentCount: number;
-  lastHeartbeatTimestamp: string;
+  lastHeartbeatTimestamp: string | null;
 }
 
 const getStatusDescription = (status: OperationalStatus, incidentCount: number): string => {
@@ -36,7 +36,8 @@ export const OperationalStatusCard: React.FC<OperationalStatusCardProps> = ({
             <>
               <span>Real-Time Telemetry Link Disconnected</span>
               <span className="text-xs font-mono text-amber-400 font-normal px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30">
-                STALE (Last known {new Date(lastHeartbeatTimestamp).toLocaleTimeString()})
+                STALE (Last known{' '}
+                {lastHeartbeatTimestamp ? new Date(lastHeartbeatTimestamp).toLocaleTimeString() : 'never'})
               </span>
             </>
           ) : status === 'UNDER_ATTACK' ? (

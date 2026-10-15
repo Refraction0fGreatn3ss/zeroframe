@@ -39,12 +39,10 @@ async function loadNotifications() {
   }
 }
 
-loadNotifications();
-
-tenantRegistry.register(
-  () => notificationStore.setState({ notifications: [] }),
-  () => loadNotifications(),
-);
+tenantRegistry.register('notification', {
+  clear: () => notificationStore.setState({ notifications: [] }),
+  reload: () => loadNotifications(),
+});
 
 realtimeClient.onMessage((event) => {
   const notification = buildNotificationFromEvent(event);

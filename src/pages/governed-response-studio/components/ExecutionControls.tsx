@@ -9,7 +9,7 @@ interface ExecutionControlsProps {
   approver1Signed: boolean;
   approver2Signed: boolean;
   isExecuting: boolean;
-  killSwitchEngaged: boolean;
+  responseBlocked: boolean;
   onExecute: () => void;
   onRollback: () => void;
 }
@@ -19,7 +19,7 @@ export const ExecutionControls: FC<ExecutionControlsProps> = ({
   approver1Signed,
   approver2Signed,
   isExecuting,
-  killSwitchEngaged,
+  responseBlocked,
   onExecute,
   onRollback,
 }) => (
@@ -32,10 +32,8 @@ export const ExecutionControls: FC<ExecutionControlsProps> = ({
     <button
       type="button"
       onClick={onExecute}
-      disabled={
-        !approver1Signed || !approver2Signed || isExecuting || killSwitchEngaged || executionState === 'VERIFIED'
-      }
-      className={`w-full py-2.5 rounded text-xs font-medium transition-colors cursor-pointer flex items-center justify-center gap-2 ${getExecuteButtonClassName(executionState, approver2Signed, killSwitchEngaged)}`}
+      disabled={!approver1Signed || !approver2Signed || isExecuting || responseBlocked || executionState === 'VERIFIED'}
+      className={`w-full py-2.5 rounded text-xs font-medium transition-colors cursor-pointer flex items-center justify-center gap-2 ${getExecuteButtonClassName(executionState, approver2Signed, responseBlocked)}`}
     >
       <Play className="w-3.5 h-3.5" />
       <span>{getExecuteButtonLabel(isExecuting, executionState)}</span>

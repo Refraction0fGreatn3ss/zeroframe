@@ -5,6 +5,7 @@ import { TruthBar } from '../../components/shared/truth-bar/TruthBar';
 import { useAppStore } from '../../stores/app-store';
 import { useDashboardStore } from '../../stores/dashboard-store';
 import { useInvestigationStore } from '../../stores/investigation-store';
+import { useKillSwitch } from '../../stores/kill-switch-store';
 import { IncidentQuestionCards } from './components/IncidentQuestionCards';
 import { OperationalStatusCard } from './components/OperationalStatusCard';
 import { ProtectionPostureCards } from './components/ProtectionPostureCards';
@@ -16,7 +17,8 @@ const INCIDENTS_PATH = '/investigate/incidents';
 export const SimpleSOCDashboard: React.FC = () => {
   const { metrics } = useDashboardStore();
   const { incidents } = useInvestigationStore();
-  const { killSwitchEngaged, setCurrentPath, realtimeConnected, lastHeartbeatTimestamp } = useAppStore();
+  const { setCurrentPath, realtimeConnected, lastHeartbeatTimestamp } = useAppStore();
+  const { state: killSwitch } = useKillSwitch();
 
   const isAttacking = incidents.length > 0;
   const criticalIncident = incidents.find((incident) => incident.severity === 'CRITICAL');
@@ -52,7 +54,7 @@ export const SimpleSOCDashboard: React.FC = () => {
       <ProtectionPostureCards
         captureState={metrics.captureState}
         observationCoveragePct={metrics.observationCoveragePct}
-        killSwitchEngaged={killSwitchEngaged}
+        killSwitch={killSwitch}
       />
     </div>
   );

@@ -28,9 +28,11 @@ import {
 import { revokeLocalSession, triggerAutoLogout } from './auth-store/session-termination';
 import { applyAuthSyncMessage } from './auth-store/sync-message-handler';
 
-export type { AuthState } from './auth-store/auth-state';
+export type { AuthState, AuthStatus } from './auth-store/auth-state';
+export { authStore } from './auth-store/auth-state';
 export type { InactivityPolicyKey } from './auth-store/inactivity-policy';
 export { INACTIVITY_POLICY_MAP, WARNING_THRESHOLD_MS } from './auth-store/inactivity-policy';
+export { revokeLocalSession } from './auth-store/session-termination';
 export {
   acknowledgeActivity,
   getRemainingInactivityMs,
@@ -59,8 +61,8 @@ startInactivityMonitor({
 listenForAuthSync(applyAuthSyncMessage);
 
 // A 401 from any request means the server already expired this session (e.g. server-side inactivity).
-apiClient.onSessionExpired(() => {
-  revokeLocalSession('SERVER_SESSION_EXPIRED', true);
+apiClient.onUnauthenticated(() => {
+  if (authStore.getState().isAuthenticated) revokeLocalSession('SERVER_SESSION_EXPIRED', true);
 });
 
 export const authActions = {

@@ -1,3 +1,4 @@
+import { navigateTo } from '../app/navigation';
 import { createStore, useStore } from '../lib/create-store';
 import { type RealtimeConnectionState, realtimeClient } from '../services/realtime-client';
 import type { OperatingMode } from '../types';
@@ -7,51 +8,48 @@ export type ViewMode = 'SIMPLE_SOC' | 'ANALYST_SOC';
 export interface AppState {
   viewMode: ViewMode;
   operatingMode: OperatingMode;
-  killSwitchEngaged: boolean;
   currentPath: string;
   isCommandPaletteOpen: boolean;
   isNotificationPanelOpen: boolean;
   isOperatorLocked: boolean;
   realtimeConnected: boolean;
   realtimeState: RealtimeConnectionState;
-  lastHeartbeatTimestamp: string;
+  lastHeartbeatTimestamp: string | null;
 }
 
-const appStore = createStore<AppState>({
+export const appStore = createStore<AppState>({
   viewMode: 'ANALYST_SOC',
   operatingMode: 'ACTIVE_PROTECTION',
-  killSwitchEngaged: false,
-  currentPath: '/overview',
+  currentPath: typeof window === 'undefined' ? '/' : window.location.pathname,
   isCommandPaletteOpen: false,
   isNotificationPanelOpen: false,
   isOperatorLocked: false,
   realtimeConnected: false,
   realtimeState: 'DISCONNECTED',
-  lastHeartbeatTimestamp: new Date().toISOString(),
+  lastHeartbeatTimestamp: null,
 });
 
 realtimeClient.onStateChange((realtimeState) => {
   appStore.setState({
     realtimeState,
     realtimeConnected: realtimeState === 'CONNECTED',
-    lastHeartbeatTimestamp: new Date().toISOString(),
+    lastHeartbeatTimestamp:
+      realtimeState === 'CONNECTED' ? new Date().toISOString() : appStore.getState().lastHeartbeatTimestamp,
   });
 });
 
-if (typeof window !== 'undefined') {
-  realtimeClient.connect();
-}
+realtimeClient.onMessage(() => {
+  appStore.setState({ lastHeartbeatTimestamp: new Date().toISOString() });
+});
 
 export const appActions = {
   setViewMode: (viewMode: ViewMode) => appStore.setState({ viewMode }),
   setOperatingMode: (operatingMode: OperatingMode) => appStore.setState({ operatingMode }),
-  toggleKillSwitch: () => appStore.setState((state) => ({ killSwitchEngaged: !state.killSwitchEngaged })),
-  setCurrentPath: (currentPath: string) => appStore.setState({ currentPath }),
+  setCurrentPath: (path: string) => navigateTo(path),
+  syncCurrentPath: (currentPath: string) => appStore.setState({ currentPath }),
   setCommandPaletteOpen: (isCommandPaletteOpen: boolean) => appStore.setState({ isCommandPaletteOpen }),
   setNotificationPanelOpen: (isNotificationPanelOpen: boolean) => appStore.setState({ isNotificationPanelOpen }),
   setOperatorLocked: (isOperatorLocked: boolean) => appStore.setState({ isOperatorLocked }),
-  setRealtimeConnected: (realtimeConnected: boolean) =>
-    appStore.setState({ realtimeConnected, lastHeartbeatTimestamp: new Date().toISOString() }),
 };
 
 export function useAppStore() {

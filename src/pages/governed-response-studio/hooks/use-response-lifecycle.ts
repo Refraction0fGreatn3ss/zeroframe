@@ -13,10 +13,10 @@ import { createLocalPermitId, formatContainmentReason, formatTargetResource } fr
 interface UseResponseLifecycleParams {
   incident: ResponseTarget;
   selectedAction: string;
-  killSwitchEngaged: boolean;
+  responseBlocked: boolean;
 }
 
-export const useResponseLifecycle = ({ incident, selectedAction, killSwitchEngaged }: UseResponseLifecycleParams) => {
+export const useResponseLifecycle = ({ incident, selectedAction, responseBlocked }: UseResponseLifecycleParams) => {
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(STEP_INDEX.PROPOSAL);
   const [permitId, setPermitId] = useState<string | null>(null);
   const [approver1Signed, setApprover1Signed] = useState(false);
@@ -66,7 +66,7 @@ export const useResponseLifecycle = ({ incident, selectedAction, killSwitchEngag
   };
 
   const executeResponse = () => {
-    if (!approver1Signed || !approver2Signed || killSwitchEngaged) return;
+    if (!approver1Signed || !approver2Signed || responseBlocked) return;
 
     setIsExecuting(true);
     setCurrentStepIndex(STEP_INDEX.EXECUTION);

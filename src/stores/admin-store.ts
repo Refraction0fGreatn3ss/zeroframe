@@ -50,14 +50,12 @@ async function loadAdminData() {
   }
 }
 
-loadAdminData();
-
-tenantRegistry.register(
-  () => adminStore.setState({ integrations: [], auditLogs: [] }),
-  async () => {
+tenantRegistry.register('admin', {
+  clear: () => adminStore.setState({ integrations: [], auditLogs: [] }),
+  reload: async () => {
     await loadAdminData();
   },
-);
+});
 
 function simulateSyncLatencyMs(): number {
   return Math.floor(SIMULATED_SYNC_MIN_LATENCY_MS + Math.random() * SIMULATED_SYNC_LATENCY_JITTER_MS);

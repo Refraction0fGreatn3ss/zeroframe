@@ -76,10 +76,8 @@ async function loadData() {
   }
 }
 
-loadData();
-
-tenantRegistry.register(
-  () =>
+tenantRegistry.register('investigation', {
+  clear: () =>
     investigationStore.setState({
       incidents: [],
       alerts: [],
@@ -87,10 +85,10 @@ tenantRegistry.register(
       selectedIncidentId: null,
       selectedEntityId: null,
     }),
-  async () => {
+  reload: async () => {
     await loadData();
   },
-);
+});
 
 realtimeClient.onMessage((msg) => {
   if (msg.type === 'INCIDENT_STATE_CHANGED') {

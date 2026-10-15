@@ -30,11 +30,11 @@ export const getProposalButtonLabel = (permitId: string | null, isSubmitting: bo
 export const getExecuteButtonClassName = (
   executionState: ResponseActionState,
   approver2Signed: boolean,
-  killSwitchEngaged: boolean,
+  responseBlocked: boolean,
 ): string =>
   executionState === 'VERIFIED'
     ? 'bg-emerald-950/60 border border-emerald-800 text-emerald-300 cursor-default'
-    : !approver2Signed || killSwitchEngaged
+    : !approver2Signed || responseBlocked
       ? 'bg-[#181b20] border border-[#23272e] text-zinc-600 cursor-not-allowed'
       : 'bg-zinc-200 hover:bg-white text-zinc-950';
 

@@ -1,38 +1,34 @@
-type ClearHandler = () => void;
-type ReloadHandler = (tenantId: string) => Promise<void>;
+export interface TenantScopedStoreHandlers {
+  clear: () => void;
+  reload?: (tenantId: string) => Promise<void> | void;
+}
 
 class TenantRegistry {
-  private readonly clearHandlers = new Set<ClearHandler>();
-  private readonly reloadHandlers = new Set<ReloadHandler>();
+  private readonly stores = new Map<string, TenantScopedStoreHandlers>();
 
-  public register(clear: ClearHandler, reload: ReloadHandler) {
-    this.clearHandlers.add(clear);
-    this.reloadHandlers.add(reload);
+  register(name: string, handlers: TenantScopedStoreHandlers): () => void {
+    this.stores.set(name, handlers);
     return () => {
-      this.clearHandlers.delete(clear);
-      this.reloadHandlers.delete(reload);
+      if (this.stores.get(name) === handlers) this.stores.delete(name);
     };
   }
 
-  public clearAll() {
-    this.clearHandlers.forEach((handler) => {
-      try {
-        handler();
-      } catch (err) {
-        console.error('Error clearing tenant store state', err);
-      }
-    });
+  registeredNames(): string[] {
+    return [...this.stores.keys()];
   }
 
-  public async reloadAll(tenantId: string) {
-    const reloads: Promise<void>[] = [];
-    this.reloadHandlers.forEach((handler) => {
+  clearAll(): void {
+    for (const [name, handlers] of this.stores) {
       try {
-        reloads.push(handler(tenantId));
+        handlers.clear();
       } catch (err) {
-        console.error('Error initiating tenant store reload', err);
+        console.error(`[tenant-registry] Failed clearing ${name}`, err);
       }
-    });
+    }
+  }
+
+  async reloadAll(tenantId: string): Promise<void> {
+    const reloads = [...this.stores.values()].map(async (handlers) => handlers.reload?.(tenantId));
     await Promise.allSettled(reloads);
   }
 }
